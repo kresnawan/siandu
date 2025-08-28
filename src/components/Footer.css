@@ -1,0 +1,136 @@
+.footer {
+  background: var(--primary-dark);
+  color: var(--white);
+  position: relative;
+}
+
+/* Subtle spacing with fade at the top of the footer */
+.footer::before {
+  content: '';
+  display: block;
+  height: 12px; /* small gap */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0));
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 2rem;
+  padding: 3rem 0;
+}
+
+.footer-col h4 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.brand-icon {
+  color: var(--primary-light);
+}
+
+.brand-text h3 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.brand-text p {
+  margin: 0;
+  color: var(--primary-light);
+  font-weight: 500;
+}
+
+.brand-desc {
+  margin: 0.5rem 0 1rem;
+  opacity: 0.9;
+}
+
+.socials {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.social-btn:hover {
+  background: var(--primary);
+}
+
+.links ul, .contact ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.links a {
+  color: var(--white);
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+.contact li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.95;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1rem 0;
+  background: #2f4a36;
+}
+
+.footer-bottom-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.legal-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.legal-links a {
+  color: var(--primary-light);
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    padding: 2rem 0;
+  }
+}
