@@ -41,15 +41,22 @@ const Navbar = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className={`nav-link ${isActive('/') ? 'active' : ''}`}
               onClick={closeMenu}
             >
               Beranda
             </Link>
-            <Link 
-              to="/login" 
+            <Link
+              to="/dashboard"
+              className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/login"
               className={`nav-link ${isActive('/login') ? 'active' : ''}`}
               onClick={closeMenu}
             >
@@ -94,3 +101,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

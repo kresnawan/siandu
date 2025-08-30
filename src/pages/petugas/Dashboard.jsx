@@ -37,11 +37,27 @@ function Dashboard() {
       ]
     },
     {
+      section: 'Manajemen Kader',
+      items: [
+        { id: 'kaders', icon: People, label: 'Data Kader', path: '/dashboard/kaders' },
+        { id: 'add-kader', icon: PersonAdd, label: 'Tambah Kader' },
+        { id: 'kader-training', icon: MenuBook, label: 'Pelatihan Kader' }
+      ]
+    },
+    {
       section: 'Manajemen Pasien',
       items: [
-        { id: 'patients', icon: People, label: 'Data Pasien' },
+        { id: 'patients', icon: People, label: 'Data Pasien', path: '/dashboard/patients' },
         { id: 'add-patient', icon: PersonAdd, label: 'Tambah Pasien' },
         { id: 'medical-records', icon: MenuBook, label: 'Rekam Medis' }
+      ]
+    },
+    {
+      section: 'Pemeriksaan Kesehatan',
+      items: [
+        { id: 'examinations', icon: MedicalServices, label: 'Pemeriksaan', path: '/dashboard/examinations' },
+        { id: 'add-examination', icon: PersonAdd, label: 'Tambah Pemeriksaan' },
+        { id: 'monthly-reports', icon: Assessment, label: 'Laporan Bulanan' }
       ]
     },
     {
@@ -92,7 +108,11 @@ function Dashboard() {
                         className={`menu-link ${activeMenu === item.id ? 'active' : ''}`}
                         onClick={(e) => {
                           e.preventDefault();
-                          setActiveMenu(item.id);
+                          if (item.path) {
+                            window.location.href = item.path;
+                          } else {
+                            setActiveMenu(item.id);
+                          }
                         }}
                       >
                         <span className="menu-icon">

@@ -9,6 +9,8 @@ import FAQPage from './pages/FAQPage';
 import './styles/global.css';
 import Dashboard from './pages/petugas/Dashboard';
 import DataPasien from './pages/petugas/DataPasien';
+import DataKader from './pages/petugas/DataKader';
+import PemeriksaanKesehatan from './pages/petugas/PemeriksaanKesehatan';
 
 
 function AppLayout() {
@@ -22,6 +24,8 @@ function AppLayout() {
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/patients" element={<DataPasien />} />
+        <Route path="/dashboard/kaders" element={<DataKader />} />
+        <Route path="/dashboard/examinations" element={<PemeriksaanKesehatan />} />
       </Routes>
     );
   }
