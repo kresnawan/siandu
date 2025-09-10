@@ -49,6 +49,24 @@ import {
 import './PemeriksaanKesehatan.css';
 import useApi from '../../hooks/useApi';
 
+const ExaminationModal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content examination-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3 className="modal-title">{title}</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function PemeriksaanKesehatan() {
   const [activeMenu, setActiveMenu] = useState('examinations');
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,19 +77,19 @@ function PemeriksaanKesehatan() {
   const [showExamModal, setShowExamModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [examData, setExamData] = useState({
-    patientId: '',
-    examDate: new Date().toISOString().split('T')[0],
+    patient_id: '',
+    exam_date: new Date().toISOString().split('T')[0],
     weight: '',
     height: '',
-    bloodPressureSystolic: '',
-    bloodPressureDiastolic: '',
-    nutritionStatus: '',
+    blood_pressure_systolic: '',
+    blood_pressure_diastolic: '',
+    nutrition_status: '',
     hypertension: '',
     diabetes: '',
-    highCholesterol: '',
-    highUricAcid: '',
-    visionProblems: '',
-    hearingProblems: '',
+    high_cholesterol: '',
+    high_uric_acid: '',
+    vision_problems: '',
+    hearing_problems: '',
     treatment: '',
     referral: '',
     notes: ''
@@ -80,7 +98,7 @@ function PemeriksaanKesehatan() {
   const [successMessage, setSuccessMessage] = useState('');
   const [currentView, setCurrentView] = useState('examinations'); // 'examinations' or 'reports'
 
-  const { loading, error, get, post, put, clearError } = useApi();
+  const { loading, error, get, post, put, delete: deleteApi, clearError } = useApi();
 
   const menuItems = [
     {
@@ -137,22 +155,25 @@ function PemeriksaanKesehatan() {
   // Load data on component mount
   useEffect(() => {
     loadPatients();
-    loadExaminations();
   }, []);
+
+  // Load examinations after patients are loaded
+  useEffect(() => {
+    if (patients.length > 0) {
+      loadExaminations();
+    }
+  }, [patients]);
 
   const loadPatients = async () => {
     try {
       clearError();
       const response = await get('/api/patients');
-      setPatients(response.data || []);
+      setPatients(response || []);
+      console.log(response)
     } catch (err) {
       console.error('Error loading patients:', err);
       // Sample data for demo
-      setPatients([
-        { id: 1, name: 'Ahmad Surya', nik: '3579031234567890', phone: '6281234567890' },
-        { id: 2, name: 'Siti Aminah', nik: '3579032345678901', phone: '6281234567891' },
-        { id: 3, name: 'Budi Santoso', nik: '3579033456789012', phone: '6281234567892' }
-      ]);
+    
     }
   };
 
@@ -160,32 +181,36 @@ function PemeriksaanKesehatan() {
     try {
       clearError();
       const response = await get('/api/examinations');
-      setExaminations(response.data || []);
+      const examData = response || [];
+
+      // Map patient_id to patientName by finding patient details
+      const mappedExams = examData.map(exam => {
+        const patient = patients.find(p => p.id === exam.patient_id);
+        return {
+          ...exam,
+          patientId: exam.patient_id,
+          patientName: patient ? patient.name : `Patient ${exam.patient_id}`,
+          examDate: new Date(exam.exam_date).toISOString().split('T')[0],
+          exam_date: new Date(exam.exam_date).toISOString().split('T')[0],
+          bloodPressureSystolic: exam.blood_pressure_systolic,
+          bloodPressureDiastolic: exam.blood_pressure_diastolic,
+          nutritionStatus: exam.nutrition_status,
+          hypertension: exam.hypertension ? 'Ya' : 'Tidak',
+          diabetes: exam.diabetes ? 'Ya' : 'Tidak',
+          highCholesterol: exam.high_cholesterol ? 'Ya' : 'Tidak',
+          highUricAcid: exam.high_uric_acid ? 'Ya' : 'Tidak',
+          visionProblems: exam.vision_problems ? 'Ya' : 'Tidak',
+          hearingProblems: exam.hearing_problems ? 'Ya' : 'Tidak',
+          treatment: exam.treatment ? 'Ya' : 'Tidak',
+          referral: exam.referral ? 'Ya' : 'Tidak'
+        };
+      });
+
+      console.log(mappedExams)
+      setExaminations(mappedExams);
     } catch (err) {
       console.error('Error loading examinations:', err);
-      // Sample examination data
-      setExaminations([
-        {
-          id: 1,
-          patientId: 1,
-          patientName: 'Ahmad Surya',
-          examDate: '2024-08-15',
-          weight: 65,
-          height: 170,
-          bloodPressureSystolic: 120,
-          bloodPressureDiastolic: 80,
-          nutritionStatus: 'NORMAL',
-          hypertension: 'Tidak',
-          diabetes: 'Tidak',
-          highCholesterol: 'Tidak',
-          highUricAcid: 'Tidak',
-          visionProblems: 'Tidak',
-          hearingProblems: 'Tidak',
-          treatment: 'Ya',
-          referral: 'Tidak',
-          notes: 'Pemeriksaan rutin, kondisi baik'
-        }
-      ]);
+
     }
   };
 
@@ -230,20 +255,21 @@ function PemeriksaanKesehatan() {
   };
 
   const handleAddExamination = () => {
+    setSelectedPatient(null);
     setExamData({
-      patientId: '',
-      examDate: new Date().toISOString().split('T')[0],
+      patient_id: '',
+      exam_date: new Date().toISOString().split('T')[0],
       weight: '',
       height: '',
-      bloodPressureSystolic: '',
-      bloodPressureDiastolic: '',
-      nutritionStatus: '',
+      blood_pressure_systolic: '',
+      blood_pressure_diastolic: '',
+      nutrition_status: '',
       hypertension: '',
       diabetes: '',
-      highCholesterol: '',
-      highUricAcid: '',
-      visionProblems: '',
-      hearingProblems: '',
+      high_cholesterol: '',
+      high_uric_acid: '',
+      vision_problems: '',
+      hearing_problems: '',
       treatment: '',
       referral: '',
       notes: ''
@@ -253,19 +279,26 @@ function PemeriksaanKesehatan() {
   };
 
   const handleFormChange = (field, value) => {
-    setExamData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Clear error for this field when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
+    // Prevent unnecessary re-renders by checking if value actually changed
+    setExamData(prev => {
+      if (prev[field] === value) return prev;
+      return {
         ...prev,
-        [field]: null
-      }));
+        [field]: value
+      };
+    });
+
+    // Clear error for this field when user starts typing (debounced)
+    if (formErrors[field]) {
+      setTimeout(() => {
+        setFormErrors(prev => ({
+          ...prev,
+          [field]: null
+        }));
+      }, 100);
     }
   };
+
 
   const calculateNutritionStatus = (weight, height) => {
     if (!weight || !height) return '';
@@ -281,10 +314,10 @@ function PemeriksaanKesehatan() {
 
   const handleWeightHeightChange = () => {
     if (examData.weight && examData.height) {
-      const nutritionStatus = calculateNutritionStatus(examData.weight, examData.height);
+      const nutrition_status = calculateNutritionStatus(examData.weight, examData.height);
       setExamData(prev => ({
         ...prev,
-        nutritionStatus
+        nutrition_status
       }));
     }
   };
@@ -296,42 +329,63 @@ function PemeriksaanKesehatan() {
   const validateForm = () => {
     const errors = {};
 
-    if (!examData.patientId) errors.patientId = 'Pasien harus dipilih';
-    if (!examData.examDate) errors.examDate = 'Tanggal pemeriksaan harus diisi';
+    if (!examData.patient_id) errors.patient_id = 'Pasien harus dipilih';
+    if (!examData.exam_date) errors.exam_date = 'Tanggal pemeriksaan harus diisi';
     if (!examData.weight) errors.weight = 'Berat badan harus diisi';
     if (!examData.height) errors.height = 'Tinggi badan harus diisi';
-    if (!examData.bloodPressureSystolic) errors.bloodPressureSystolic = 'Tekanan darah sistolik harus diisi';
-    if (!examData.bloodPressureDiastolic) errors.bloodPressureDiastolic = 'Tekanan darah diastolik harus diisi';
+    if (!examData.blood_pressure_systolic) errors.blood_pressure_systolic = 'Tekanan darah sistolik harus diisi';
+    if (!examData.blood_pressure_diastolic) errors.blood_pressure_diastolic = 'Tekanan darah diastolik harus diisi';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmitExamination = async (e) => {
-    e.preventDefault();
+   e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+   if (!validateForm()) {
+     return;
+   }
 
-    try {
-      clearError();
-      const response = await post('/api/examinations', examData);
+   try {
+     clearError();
+     let response;
 
-      if (response.data) {
-        setExaminations(prev => [...prev, response.data]);
-        setShowExamModal(false);
-        setSuccessMessage('Pemeriksaan berhasil disimpan');
-        setTimeout(() => setSuccessMessage(''), 3000);
-      }
-    } catch (err) {
-      console.error('Error saving examination:', err);
-    }
-  };
+     // Check if we're editing (selectedPatient exists) or creating new
+     if (selectedPatient && selectedPatient.id) {
+       // Update existing examination
+       response = await put(`/api/examinations/${selectedPatient.id}`, examData);
+       setSuccessMessage('Pemeriksaan berhasil diperbarui');
+     } else {
+       // Create new examination
+       response = await post('/api/examinations', examData);
+       setSuccessMessage('Pemeriksaan berhasil disimpan');
+     }
 
-  const handleDeleteExamination = (examId) => {
+     if (response) {
+       // Reload examinations to get updated data with proper mapping
+       loadExaminations();
+       setShowExamModal(false);
+       setSelectedPatient(null);
+       setTimeout(() => setSuccessMessage(''), 3000);
+     }
+   } catch (err) {
+     console.error('Error saving examination:', err);
+   }
+ };
+
+  const handleDeleteExamination = async (examId) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus data pemeriksaan ini?')) {
-      setExaminations(examinations.filter(e => e.id !== examId));
+      try {
+        clearError();
+        await deleteApi(`/api/examinations/${examId}`);
+        // Reload examinations after successful deletion
+        loadExaminations();
+        setSuccessMessage('Data pemeriksaan berhasil dihapus');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } catch (err) {
+        console.error('Error deleting examination:', err);
+      }
     }
   };
 
@@ -371,23 +425,7 @@ function PemeriksaanKesehatan() {
     return report;
   };
 
-  const ExaminationModal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
 
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content examination-modal" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h3 className="modal-title">{title}</h3>
-            <button className="modal-close" onClick={onClose}>×</button>
-          </div>
-          <div className="modal-body">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const handleMenuClick = (item) => {
     if (item.path) {
@@ -625,13 +663,15 @@ function PemeriksaanKesehatan() {
                             </td>
                             <td>
                               <span className={`nutrition-status ${exam.nutritionStatus?.toLowerCase()}`}>
-                                {exam.nutritionStatus}
+                                {exam.nutritionStatus || exam.nutrition_status}
                               </span>
                             </td>
                             <td>
                               <div className="health-conditions">
                                 {exam.hypertension === 'Ya' && <span className="condition-tag">Hipertensi</span>}
                                 {exam.diabetes === 'Ya' && <span className="condition-tag">Diabetes</span>}
+                                {exam.highCholesterol === 'Ya' && <span className="condition-tag">Kolesterol Tinggi</span>}
+                                {exam.highUricAcid === 'Ya' && <span className="condition-tag">Asam Urat Tinggi</span>}
                                 {exam.visionProblems === 'Ya' && <span className="condition-tag">Gangguan Penglihatan</span>}
                                 {exam.hearingProblems === 'Ya' && <span className="condition-tag">Gangguan Pendengaran</span>}
                               </div>
@@ -649,7 +689,25 @@ function PemeriksaanKesehatan() {
                                   className="action-btn edit"
                                   onClick={() => {
                                     setSelectedPatient(exam);
-                                    setExamData(exam);
+                                    setExamData({
+                                      patient_id: exam.patient_id || exam.patientId,
+                                      exam_date: exam.exam_date || exam.examDate,
+                                      weight: exam.weight,
+                                      height: exam.height,
+                                      blood_pressure_systolic: exam.blood_pressure_systolic || exam.bloodPressureSystolic,
+                                      blood_pressure_diastolic: exam.blood_pressure_diastolic || exam.bloodPressureDiastolic,
+                                      nutrition_status: exam.nutrition_status || exam.nutritionStatus,
+                                      hypertension: exam.hypertension,
+                                      diabetes: exam.diabetes,
+                                      high_cholesterol: exam.high_cholesterol || exam.highCholesterol,
+                                      high_uric_acid: exam.high_uric_acid || exam.highUricAcid,
+                                      vision_problems: exam.vision_problems || exam.visionProblems,
+                                      hearing_problems: exam.hearing_problems || exam.hearingProblems,
+                                      treatment: exam.treatment,
+                                      referral: exam.referral,
+                                      notes: exam.notes
+                                    });
+                                    setFormErrors({});
                                     setShowExamModal(true);
                                   }}
                                   title="Edit"
@@ -687,7 +745,10 @@ function PemeriksaanKesehatan() {
       {/* Examination Modal */}
       <ExaminationModal
         isOpen={showExamModal}
-        onClose={() => setShowExamModal(false)}
+        onClose={() => {
+          setShowExamModal(false);
+          setSelectedPatient(null);
+        }}
         title={selectedPatient ? "Edit Pemeriksaan" : "Tambah Pemeriksaan Baru"}
       >
         <form className="examination-form" onSubmit={handleSubmitExamination}>
@@ -695,9 +756,9 @@ function PemeriksaanKesehatan() {
             <div className="form-group">
               <label>Pasien *</label>
               <select
-                value={examData.patientId}
-                onChange={(e) => handleFormChange('patientId', e.target.value)}
-                className={formErrors.patientId ? 'error' : ''}
+                value={examData.patient_id}
+                onChange={(e) => handleFormChange('patient_id', e.target.value)}
+                className={formErrors.patient_id ? 'error' : ''}
               >
                 <option value="">Pilih Pasien</option>
                 {patients.map(patient => (
@@ -706,18 +767,18 @@ function PemeriksaanKesehatan() {
                   </option>
                 ))}
               </select>
-              {formErrors.patientId && <span className="error-message">{formErrors.patientId}</span>}
+              {formErrors.patient_id && <span className="error-message">{formErrors.patient_id}</span>}
             </div>
 
             <div className="form-group">
               <label>Tanggal Pemeriksaan *</label>
               <input
                 type="date"
-                value={examData.examDate}
-                onChange={(e) => handleFormChange('examDate', e.target.value)}
-                className={formErrors.examDate ? 'error' : ''}
+                value={examData.exam_date}
+                onChange={(e) => handleFormChange('exam_date', e.target.value)}
+                className={formErrors.exam_date ? 'error' : ''}
               />
-              {formErrors.examDate && <span className="error-message">{formErrors.examDate}</span>}
+              {formErrors.exam_date && <span className="error-message">{formErrors.exam_date}</span>}
             </div>
 
             <div className="form-group">
@@ -750,31 +811,31 @@ function PemeriksaanKesehatan() {
               <label>Tekanan Darah Sistolik *</label>
               <input
                 type="number"
-                value={examData.bloodPressureSystolic}
-                onChange={(e) => handleFormChange('bloodPressureSystolic', e.target.value)}
+                value={examData.blood_pressure_systolic}
+                onChange={(e) => handleFormChange('blood_pressure_systolic', e.target.value)}
                 placeholder="120"
-                className={formErrors.bloodPressureSystolic ? 'error' : ''}
+                className={formErrors.blood_pressure_systolic ? 'error' : ''}
               />
-              {formErrors.bloodPressureSystolic && <span className="error-message">{formErrors.bloodPressureSystolic}</span>}
+              {formErrors.blood_pressure_systolic && <span className="error-message">{formErrors.blood_pressure_systolic}</span>}
             </div>
 
             <div className="form-group">
               <label>Tekanan Darah Diastolik *</label>
               <input
                 type="number"
-                value={examData.bloodPressureDiastolic}
-                onChange={(e) => handleFormChange('bloodPressureDiastolic', e.target.value)}
+                value={examData.blood_pressure_diastolic}
+                onChange={(e) => handleFormChange('blood_pressure_diastolic', e.target.value)}
                 placeholder="80"
-                className={formErrors.bloodPressureDiastolic ? 'error' : ''}
+                className={formErrors.blood_pressure_diastolic ? 'error' : ''}
               />
-              {formErrors.bloodPressureDiastolic && <span className="error-message">{formErrors.bloodPressureDiastolic}</span>}
+              {formErrors.blood_pressure_diastolic && <span className="error-message">{formErrors.blood_pressure_diastolic}</span>}
             </div>
 
             <div className="form-group">
               <label>Status Gizi</label>
               <input
                 type="text"
-                value={examData.nutritionStatus}
+                value={examData.nutrition_status}
                 readOnly
                 placeholder="Otomatis dihitung berdasarkan BMI"
               />
@@ -807,8 +868,8 @@ function PemeriksaanKesehatan() {
             <div className="form-group">
               <label>Kolesterol Tinggi</label>
               <select
-                value={examData.highCholesterol}
-                onChange={(e) => handleFormChange('highCholesterol', e.target.value)}
+                value={examData.high_cholesterol}
+                onChange={(e) => handleFormChange('high_cholesterol', e.target.value)}
               >
                 <option value="">Pilih</option>
                 <option value="Ya">Ya</option>
@@ -819,8 +880,8 @@ function PemeriksaanKesehatan() {
             <div className="form-group">
               <label>Asam Urat Tinggi</label>
               <select
-                value={examData.highUricAcid}
-                onChange={(e) => handleFormChange('highUricAcid', e.target.value)}
+                value={examData.high_uric_acid}
+                onChange={(e) => handleFormChange('high_uric_acid', e.target.value)}
               >
                 <option value="">Pilih</option>
                 <option value="Ya">Ya</option>
@@ -831,8 +892,8 @@ function PemeriksaanKesehatan() {
             <div className="form-group">
               <label>Gangguan Penglihatan</label>
               <select
-                value={examData.visionProblems}
-                onChange={(e) => handleFormChange('visionProblems', e.target.value)}
+                value={examData.vision_problems}
+                onChange={(e) => handleFormChange('vision_problems', e.target.value)}
               >
                 <option value="">Pilih</option>
                 <option value="Ya">Ya</option>
@@ -843,8 +904,8 @@ function PemeriksaanKesehatan() {
             <div className="form-group">
               <label>Gangguan Pendengaran</label>
               <select
-                value={examData.hearingProblems}
-                onChange={(e) => handleFormChange('hearingProblems', e.target.value)}
+                value={examData.hearing_problems}
+                onChange={(e) => handleFormChange('hearing_problems', e.target.value)}
               >
                 <option value="">Pilih</option>
                 <option value="Ya">Ya</option>

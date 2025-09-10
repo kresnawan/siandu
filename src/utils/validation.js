@@ -1,7 +1,8 @@
 // Validation utility functions for patient data forms
 
 export const validateRequired = (value, fieldName) => {
-  if (!value || value.trim() === '') {
+  const stringValue = String(value).trim();
+  if (!value || stringValue === '') {
     return `${fieldName} wajib diisi`;
   }
   return null;
@@ -137,4 +138,38 @@ export const formatNIK = (nik) => {
   }
 
   return digits;
+};
+
+export const validateKaderForm = (formData) => {
+  const errors = {};
+
+  // Required field validations
+  errors.name = validateRequired(formData.name, 'Nama lengkap');
+  errors.kaderSince = validateRequired(formData.kaderSince, 'Tahun menjadi kader');
+  errors.nik = validateNIK(formData.nik);
+  errors.phone = validatePhone(formData.phone);
+  errors.birthDate = validateBirthDate(formData.birthDate);
+  errors.gender = validateRequired(formData.gender, 'Jenis kelamin');
+  errors.education = validateRequired(formData.education, 'Pendidikan terakhir');
+  errors.healthInsurance = validateRequired(formData.healthInsurance, 'Kepemilikan JKN');
+  errors.bankAccount = validateRequired(formData.bankAccount, 'Nomor rekening');
+  errors.posyanduArea = validateRequired(formData.posyanduArea, 'Posyandu wilayah');
+  errors.posyanduName = validateRequired(formData.posyanduName, 'Nama posyandu');
+  errors.ktpAddress = validateRequired(formData.ktpAddress, 'Alamat sesuai KTP');
+  errors.residenceAddress = validateRequired(formData.residenceAddress, 'Alamat domisili');
+
+  // Optional field validations
+  errors.email = validateEmail(formData.email);
+
+  // Remove null errors
+  Object.keys(errors).forEach(key => {
+    if (errors[key] === null) {
+      delete errors[key];
+    }
+  });
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
 };

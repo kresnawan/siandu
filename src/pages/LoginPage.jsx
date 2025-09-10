@@ -1,24 +1,27 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Visibility, 
-  VisibilityOff, 
-  Email, 
+import {
+  Visibility,
+  VisibilityOff,
+  Email,
   Lock,
   Person,
   HealthAndSafety
 } from '@mui/icons-material';
 import './AuthPages.css';
+import useApi from '../hooks/useApi';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { post, loading, error } = useApi();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  // Remove local isLoading state, use loading from useApi
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,7 +33,8 @@ const LoginPage = () => {
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
-        [name]: ''
+        [name]: '',
+        general: '' // Clear general error too
       }));
     }
   };
@@ -46,7 +50,7 @@ const LoginPage = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password wajib diisi';
-    } else if (formData.password.length < 6) {
+    } else if (formData.password.length < 1) {
       newErrors.password = 'Password minimal 6 karakter';
     }
 
@@ -56,24 +60,36 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Login data:', formData);
-      // Here you would typically make an API call to authenticate
-      alert('Login berhasil!');
+      const response = await post('/auth/login', formData);
+
+      // Check if login was successful
+      if (response && response.id) {
+        // Store user info in localStorage
+        localStorage.setItem('user', JSON.stringify(response));
+
+        // Store authentication status in localStorage
+        localStorage.setItem('isAuthenticated', 'true');
+
+        // Check user role to determine redirect
+        if (response.role === 3421) { // Admin role
+          navigate('/dashboard');
+        } else {
+          navigate('/'); // Regular user goes to home
+        }
+
+        alert('Login berhasil!');
+      } else {
+        setErrors({ general: 'Login gagal. Periksa email dan password Anda.' });
+      }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login gagal. Silakan coba lagi.');
-    } finally {
-      setIsLoading(false);
+      setErrors({ general: error.message || 'Login gagal. Silakan coba lagi.' });
     }
   };
 
@@ -115,7 +131,7 @@ const LoginPage = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.email ? 'error' : ''}`}
                 placeholder="Masukkan email Anda"
-                disabled={isLoading}
+                disabled={loading}
               />
               {errors.email && <span className="error-message">{errors.email}</span>}
             </div>
@@ -134,19 +150,21 @@ const LoginPage = () => {
                   onChange={handleChange}
                   className={`form-input ${errors.password ? 'error' : ''}`}
                   placeholder="Masukkan password Anda"
-                  disabled={isLoading}
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={togglePasswordVisibility}
-                  disabled={isLoading}
+                  disabled={loading}
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </button>
               </div>
               {errors.password && <span className="error-message">{errors.password}</span>}
             </div>
+
+            {errors.general && <div className="error-message general-error">{errors.general}</div>}
 
             <div className="form-options">
               <label className="checkbox-container">
@@ -161,10 +179,10 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              className={`btn btn-primary auth-submit ${isLoading ? 'loading' : ''}`}
-              disabled={isLoading}
+              className={`btn btn-primary auth-submit ${loading ? 'loading' : ''}`}
+              disabled={loading}
             >
-              {isLoading ? 'Memproses...' : 'Masuk'}
+              {loading ? 'Memproses...' : 'Masuk'}
             </button>
           </form>
 

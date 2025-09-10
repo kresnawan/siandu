@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -11,6 +12,7 @@ import Dashboard from './pages/petugas/Dashboard';
 import DataPasien from './pages/petugas/DataPasien';
 import DataKader from './pages/petugas/DataKader';
 import PemeriksaanKesehatan from './pages/petugas/PemeriksaanKesehatan';
+import VaccinationPage from './pages/petugas/VaccinationPage';
 
 
 function AppLayout() {
@@ -21,12 +23,15 @@ function AppLayout() {
 
   if (isDashboard) {
     return (
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/patients" element={<DataPasien />} />
-        <Route path="/dashboard/kaders" element={<DataKader />} />
-        <Route path="/dashboard/examinations" element={<PemeriksaanKesehatan />} />
-      </Routes>
+      <ProtectedRoute requireAdmin={true}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/patients" element={<DataPasien />} />
+          <Route path="/dashboard/kaders" element={<DataKader />} />
+          <Route path="/dashboard/examinations" element={<PemeriksaanKesehatan />} />
+          <Route path="/dashboard/vaccinations" element={<VaccinationPage />} />
+        </Routes>
+      </ProtectedRoute>
     );
   }
 

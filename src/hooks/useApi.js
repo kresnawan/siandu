@@ -4,115 +4,53 @@ const useApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const apiCall = useCallback(async (endpoint, options = {}) => {
-    setLoading(true);
-    setError(null);
+// In useApi.js - Inside the `apiCall` function
+const apiCall = useCallback(async (endpoint, options = {}) => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+  try {
+    const baseURL = 'http://localhost:3001';
+    const url = `${baseURL}${endpoint}`;
 
-      // Mock API responses based on endpoint
-      let mockResponse;
+    // Prepare headers and body
+    let headers = {
+      ...options.headers,
+    };
 
-      switch (endpoint) {
-        case '/api/patients':
-          if (options.method === 'GET') {
-            mockResponse = {
-              data: [
-                {
-                  id: 1,
-                  name: 'Ahmad Surya',
-                  nik: '3171234567890123',
-                  phone: '081234567890',
-                  email: 'ahmad.surya@email.com',
-                  address: 'Jl. Sudirman No. 123, Jakarta Pusat',
-                  birthDate: '1990-05-15',
-                  gender: 'Laki-laki',
-                  bloodType: 'O+',
-                  status: 'Aktif',
-                  lastVisit: '2024-01-15',
-                  medicalRecords: 5
-                },
-                {
-                  id: 2,
-                  name: 'Siti Aminah',
-                  nik: '3172345678901234',
-                  phone: '081345678901',
-                  email: 'siti.aminah@email.com',
-                  address: 'Jl. Thamrin No. 456, Jakarta Pusat',
-                  birthDate: '1985-08-22',
-                  gender: 'Perempuan',
-                  bloodType: 'A+',
-                  status: 'Aktif',
-                  lastVisit: '2024-01-10',
-                  medicalRecords: 8
-                },
-                {
-                  id: 3,
-                  name: 'Budi Santoso',
-                  nik: '3173456789012345',
-                  phone: '081456789012',
-                  email: 'budi.santoso@email.com',
-                  address: 'Jl. Gatot Subroto No. 789, Jakarta Selatan',
-                  birthDate: '1978-12-03',
-                  gender: 'Laki-laki',
-                  bloodType: 'B+',
-                  status: 'Tidak Aktif',
-                  lastVisit: '2023-11-20',
-                  medicalRecords: 12
-                }
-              ],
-              total: 3,
-              page: 1,
-              limit: 10
-            };
-          } else if (options.method === 'POST') {
-            const newPatient = {
-              id: Date.now(),
-              ...options.body,
-              status: 'Aktif',
-              lastVisit: new Date().toISOString().split('T')[0],
-              medicalRecords: 0
-            };
-            mockResponse = { data: newPatient };
-          }
-          break;
+    let body = options.body;
 
-        case '/api/patients/search':
-          mockResponse = {
-            data: [
-              {
-                id: 1,
-                name: 'Ahmad Surya',
-                nik: '3171234567890123',
-                phone: '081234567890',
-                email: 'ahmad.surya@email.com',
-                address: 'Jl. Sudirman No. 123, Jakarta Pusat',
-                birthDate: '1990-05-15',
-                gender: 'Laki-laki',
-                bloodType: 'O+',
-                status: 'Aktif',
-                lastVisit: '2024-01-15',
-                medicalRecords: 5
-              }
-            ],
-            total: 1
-          };
-          break;
-
-        default:
-          mockResponse = { data: null };
-      }
-
-      return mockResponse;
-    } catch (err) {
-      setError(err.message || 'Terjadi kesalahan saat mengambil data');
-      throw err;
-    } finally {
-      setLoading(false);
+    // If body is FormData, DO NOT set Content-Type manually.
+    if (body instanceof FormData) {
+      delete headers['Content-Type']; // Let browser set correct multipart/form-data header
+      // Body is already FormData, no need to stringify
+    } else if (body) {
+      // For non-FormData bodies, set Content-Type to JSON and stringify
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(body);
     }
-  }, []);
+
+    const response = await fetch(url, {
+      method: options.method || 'GET',
+      headers: headers,
+      credentials: 'include',
+      body: body, // <-- Use the prepared body
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    setError(err.message || 'Terjadi kesalahan saat mengambil data');
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const get = useCallback((endpoint, params = {}) => {
     const queryString = new URLSearchParams(params).toString();
@@ -121,23 +59,73 @@ const useApi = () => {
   }, [apiCall]);
 
   const post = useCallback((endpoint, data) => {
-    return apiCall(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: data
-    });
+    // Check if data contains files
+    const hasFiles = data instanceof FormData ||
+      (data && typeof data === 'object' && Object.values(data).some(value => value instanceof File));
+    
+    if (hasFiles) {
+      // Handle file uploads with FormData
+      const formData = data instanceof FormData ? data : new FormData();
+      
+      if (!(data instanceof FormData)) {
+        Object.keys(data).forEach(key => {
+          if (data[key] instanceof File) {
+            formData.append(key, data[key]);
+          } else {
+            formData.append(key, data[key]);
+          }
+        });
+      }
+      
+      return apiCall(endpoint, {
+        method: 'POST',
+        body: formData
+      });
+    } else {
+      // Handle regular JSON data
+      return apiCall(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: data
+      });
+    }
   }, [apiCall]);
 
   const put = useCallback((endpoint, data) => {
-    return apiCall(endpoint, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: data
-    });
+    // Check if data contains files
+    const hasFiles = data instanceof FormData ||
+      (data && typeof data === 'object' && Object.values(data).some(value => value instanceof File));
+    
+    if (hasFiles) {
+      // Handle file uploads with FormData
+      const formData = data instanceof FormData ? data : new FormData();
+      
+      if (!(data instanceof FormData)) {
+        Object.keys(data).forEach(key => {
+          if (data[key] instanceof File) {
+            formData.append(key, data[key]);
+          } else {
+            formData.append(key, data[key]);
+          }
+        });
+      }
+      
+      return apiCall(endpoint, {
+        method: 'PUT',
+        body: formData
+      });
+    } else {
+      // Handle regular JSON data
+      return apiCall(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: data
+      });
+    }
   }, [apiCall]);
 
   const del = useCallback((endpoint) => {

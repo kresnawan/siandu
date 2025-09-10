@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dashboard as DashboardIcon,
   People,
@@ -20,12 +21,33 @@ import {
   Logout,
   MenuBook,
   Analytics,
-  AccountCircle
+  AccountCircle,
+  BeachAccess
 } from '@mui/icons-material';
 import './dashboard.css';
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to clear server-side session
+      await fetch('http://localhost:3001/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    // Clear authentication data
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+
+    // Redirect to login
+    navigate('/login');
+  };
 
   const menuItems = [
     {
@@ -65,6 +87,7 @@ function Dashboard() {
       items: [
         { id: 'health-services', icon: MedicalServices, label: 'Layanan Kesehatan' },
         { id: 'vaccinations', icon: Vaccines, label: 'Vaksinasi' },
+        { id: 'vaccinations', icon: Vaccines, label: 'Vaksinasi', path: '/dashboard/vaccinations' },
         { id: 'appointments', icon: EventNote, label: 'Jadwal Kunjungan' },
         { id: 'emergency', icon: LocalHospital, label: 'Darurat' }
       ]
@@ -130,7 +153,10 @@ function Dashboard() {
             <div className="menu-section">
               <ul className="menu-list">
                 <li className="menu-item">
-                  <a href="#" className="menu-link">
+                  <a href="#" className="menu-link" onClick={(e) => {
+                    e.preventDefault();
+                    handleLogout();
+                  }}>
                     <span className="menu-icon">
                       <Logout />
                     </span>

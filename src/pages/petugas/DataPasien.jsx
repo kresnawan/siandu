@@ -40,6 +40,40 @@ import './DataPasien.css';
 import useApi from '../../hooks/useApi';
 import { validatePatientForm, formatPhoneNumber, formatNIK } from '../../utils/validation';
 
+const PatientModal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+
+  const handleClose = () => {
+    // Reset form data when closing modal
+    setFormData({
+      name: '',
+      nik: '',
+      phone: '',
+      email: '',
+      address: '',
+      birthDate: '',
+      gender: '',
+      bloodType: ''
+    });
+    setFormErrors({});
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3 className="modal-title">{title}</h3>
+          <button className="modal-close" onClick={handleClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function DataPasien() {
   const [activeMenu, setActiveMenu] = useState('patients');
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,7 +96,7 @@ function DataPasien() {
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { loading, error, get, post, put, clearError } = useApi();
+  const { loading, error, get, post, put, delete: del, clearError } = useApi();
 
   const menuItems = [
     {
@@ -125,7 +159,16 @@ function DataPasien() {
     try {
       clearError();
       const response = await get('/api/patients');
-      setPatients(response.data || []);
+      console.log('Patients loaded:', response);
+  
+      const patientsWithDefaults = (response || []).map(patient => ({
+        ...patient,
+        status: patient.status || 'Aktif', 
+        lastVisit: patient.lastVisit || new Date().toISOString(), 
+        medicalRecords: patient.medicalRecords || 0 
+      }));
+  
+      setPatients(patientsWithDefaults);
     } catch (err) {
       console.error('Error loading patients:', err);
     }
@@ -139,7 +182,7 @@ function DataPasien() {
 
     try {
       clearError();
-      const response = await get('/api/patients/search', { q: query });
+      const response = await get('/pasien/search', { q: query });
       setPatients(response.data || []);
     } catch (err) {
       console.error('Error searching patients:', err);
@@ -165,6 +208,23 @@ function DataPasien() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  // Reset form data when modals close
+  useEffect(() => {
+    if (!showAddModal && !showEditModal) {
+      setFormData({
+        name: '',
+        nik: '',
+        phone: '',
+        email: '',
+        address: '',
+        birthDate: '',
+        gender: '',
+        bloodType: ''
+      });
+      setFormErrors({});
+    }
+  }, [showAddModal, showEditModal]);
+
   const handleViewPatient = (patient) => {
     setSelectedPatient(patient);
     setShowViewModal(true);
@@ -173,24 +233,33 @@ function DataPasien() {
   const handleEditPatient = (patient) => {
     setSelectedPatient(patient);
     setFormData({
-      name: patient.name,
-      nik: patient.nik,
-      phone: patient.phone,
+      name: patient.name || '',
+      nik: patient.nik || '',
+      phone: patient.phone || '',
       email: patient.email || '',
-      address: patient.address,
-      birthDate: patient.birthDate,
-      gender: patient.gender,
+      address: patient.address || '',
+      birthDate: patient.birthDate ? patient.birthDate.split('T')[0] : '',
+      gender: patient.gender || '',
       bloodType: patient.bloodType || ''
     });
     setFormErrors({});
     setShowEditModal(true);
   };
 
-  const handleDeletePatient = (patientId) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus data pasien ini?')) {
-      setPatients(patients.filter(p => p.id !== patientId));
-    }
-  };
+  const handleDeletePatient = async (patientId) => {
+        if (window.confirm('Apakah Anda yakin ingin menghapus data pasien ini?')) {
+          try {
+            clearError();
+            await del(`/pasien/${patientId}`);
+            setPatients(patients.filter(p => p.id !== patientId));
+            setSuccessMessage('Data pasien berhasil dihapus');
+            setTimeout(() => setSuccessMessage(''), 3000);
+          } catch (err) {
+            console.error('Error deleting patient:', err);
+            // Error will be automatically set by the useApi hook and displayed in the UI
+          }
+        }
+      };
 
   const handleAddPatient = () => {
     setFormData({
@@ -208,17 +277,23 @@ function DataPasien() {
   };
 
   const handleFormChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Clear error for this field when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
+    // Prevent unnecessary re-renders by checking if value actually changed
+    setFormData(prev => {
+      if (prev[field] === value) return prev;
+      return {
         ...prev,
-        [field]: null
-      }));
+        [field]: value
+      };
+    });
+
+    // Clear error for this field when user starts typing (debounced)
+    if (formErrors[field]) {
+      setTimeout(() => {
+        setFormErrors(prev => ({
+          ...prev,
+          [field]: null
+        }));
+      }, 100);
     }
   };
 
@@ -230,6 +305,7 @@ function DataPasien() {
 
   const handleSubmitPatient = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!validateForm()) {
       return;
@@ -237,7 +313,8 @@ function DataPasien() {
 
     try {
       clearError();
-      const response = await post('/api/patients', formData);
+      const response = await post('/pasien', formData);
+      await loadPatients();
 
       if (response.data) {
         setPatients(prev => [...prev, response.data]);
@@ -252,6 +329,7 @@ function DataPasien() {
 
   const handleUpdatePatient = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!validateForm()) {
       return;
@@ -259,7 +337,8 @@ function DataPasien() {
 
     try {
       clearError();
-      const response = await put(`/api/patients/${selectedPatient.id}`, formData);
+      const response = await put(`/pasien/${selectedPatient.id}`, formData);
+      await loadPatients();
 
       if (response.data) {
         setPatients(prev => prev.map(p =>
@@ -274,23 +353,7 @@ function DataPasien() {
     }
   };
 
-  const PatientModal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
 
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h3 className="modal-title">{title}</h3>
-            <button className="modal-close" onClick={onClose}>×</button>
-          </div>
-          <div className="modal-body">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="data-pasien-page">
@@ -491,7 +554,7 @@ function DataPasien() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredPatients.map((patient) => (
+                        {patients.map((patient) => (
                           <tr key={patient.id}>
                             <td>
                               <div className="patient-info">

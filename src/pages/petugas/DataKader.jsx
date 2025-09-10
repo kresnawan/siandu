@@ -41,8 +41,24 @@ import {
 } from '@mui/icons-material';
 import './DataKader.css';
 import useApi from '../../hooks/useApi';
-// import { validateKaderForm, formatPhoneNumber, formatNIK } from '../../utils/validation';
+import { validateKaderForm, formatPhoneNumber, formatNIK } from '../../utils/validation';
+const KaderModal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
 
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content kader-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3 className="modal-title">{title}</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
 function DataKader() {
   const [activeMenu, setActiveMenu] = useState('kaders');
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,13 +84,14 @@ function DataKader() {
     posyanduArea: '',
     posyanduName: '',
     training: '',
+    status: 'Aktif',
     photo: null
   });
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [photoPreview, setPhotoPreview] = useState(null);
 
-  const { loading, error, get, post, put, clearError } = useApi();
+  const { loading, error, get, post, put, delete: deleteApi, clearError } = useApi();
 
   const menuItems = [
     {
@@ -128,33 +145,10 @@ function DataKader() {
   const loadKaders = async () => {
     try {
       clearError();
-      const response = await get('/api/kaders');
-      setKaders(response.data || []);
+      const response = await get('/kader');
+      setKaders(response || []);
     } catch (err) {
       console.error('Error loading kaders:', err);
-      // For demo purposes, load sample data
-      setKaders([
-        {
-          id: 1,
-          name: 'Ratih Estiwening',
-          kaderSince: '2007',
-          nik: '3579034412650006',
-          ktpAddress: 'Bumiasri Sengkaling Selatan L-15, RT/RW : 02/09, Dadaprejo, Junrejo, Jawa Timur',
-          residenceAddress: 'Bumiasri Sengkaling Selatan L-15, RT/RW : 02/09, Dadaprejo, Junrejo, Batu',
-          birthDate: '1965-12-04',
-          gender: 'Perempuan',
-          education: 'S1',
-          phone: '6285791323079',
-          email: 'ratihestiwening@gmail.com',
-          healthInsurance: 'tidak',
-          bankAccount: 'Bank Jatim 0406231356',
-          posyanduArea: 'Dadaprejo',
-          posyanduName: 'Kemuning',
-          training: '25 Kompetensi Dasar Kader 2024',
-          status: 'Aktif',
-          photo: null
-        }
-      ]);
     }
   };
 
@@ -166,8 +160,8 @@ function DataKader() {
 
     try {
       clearError();
-      const response = await get('/api/kaders/search', { q: query });
-      setKaders(response.data || []);
+      const response = await get('/kader/search', { q: query });
+      setKaders(response || []);
     } catch (err) {
       console.error('Error searching kaders:', err);
     }
@@ -175,7 +169,7 @@ function DataKader() {
 
   // Filter kaders based on search term and status filter
   const filteredKaders = kaders.filter(kader => {
-    const matchesFilter = filterStatus === 'all' || kader.status === filterStatus;
+    const matchesFilter = filterStatus === 'all' || (kader.status || 'Aktif') === filterStatus;
     const matchesSearch = !searchTerm ||
       kader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       kader.nik.includes(searchTerm) ||
@@ -198,37 +192,67 @@ function DataKader() {
 
   const handleViewKader = (kader) => {
     setSelectedKader(kader);
+    setFormData({
+      name: kader.name || '',
+      kaderSince: kader.kaderSince || '',
+      nik: kader.nik || '', // This might be a plain string like "1234567890123456"
+      ktpAddress: kader.ktpAddress || '',
+      residenceAddress: kader.residenceAddress || '',
+      birthDate: kader.birthDate || '',
+      gender: kader.gender || '',
+      education: kader.education || '',
+      phone: kader.phone || '',
+      email: kader.email || '',
+      healthInsurance: kader.healthInsurance || '',
+      bankAccount: kader.bankAccount || '',
+      posyanduArea: kader.posyanduArea || '',
+      posyanduName: kader.posyanduName || '',
+      training: kader.training || '',
+      status: kader.status || 'Aktif',
+      photo: null
+    });
+    setPhotoPreview(kader.photo || null);
+    setFormErrors({});
     setShowViewModal(true);
   };
 
   const handleEditKader = (kader) => {
     setSelectedKader(kader);
     setFormData({
-      name: kader.name,
-      kaderSince: kader.kaderSince,
-      nik: kader.nik,
-      ktpAddress: kader.ktpAddress,
-      residenceAddress: kader.residenceAddress,
-      birthDate: kader.birthDate,
-      gender: kader.gender,
-      education: kader.education,
-      phone: kader.phone,
+      name: kader.name || '',
+      kaderSince: kader.kaderSince || '',
+      nik: kader.nik || '',
+      ktpAddress: kader.ktpAddress || '',
+      residenceAddress: kader.residenceAddress || '',
+      birthDate: kader.birthDate || '',
+      gender: kader.gender || '',
+      education: kader.education || '',
+      phone: kader.phone || '',
       email: kader.email || '',
-      healthInsurance: kader.healthInsurance,
-      bankAccount: kader.bankAccount,
-      posyanduArea: kader.posyanduArea,
-      posyanduName: kader.posyanduName,
-      training: kader.training,
+      healthInsurance: kader.healthInsurance || '',
+      bankAccount: kader.bankAccount || '',
+      posyanduArea: kader.posyanduArea || '',
+      posyanduName: kader.posyanduName || '',
+      training: kader.training || '',
+      status: kader.status || 'Aktif',
       photo: null
     });
-    setPhotoPreview(kader.photo);
+    setPhotoPreview(kader.photo || null);
     setFormErrors({});
     setShowEditModal(true);
   };
 
-  const handleDeleteKader = (kaderId) => {
+  const handleDeleteKader = async (kaderId) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus data kader ini?')) {
-      setKaders(kaders.filter(k => k.id !== kaderId));
+      try {
+        clearError();
+        await deleteApi(`/kader/${kaderId}`);
+        setKaders(kaders.filter(k => k.id !== kaderId));
+        setSuccessMessage('Data kader berhasil dihapus');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } catch (err) {
+        console.error('Error deleting kader:', err);
+      }
     }
   };
 
@@ -249,6 +273,7 @@ function DataKader() {
       posyanduArea: '',
       posyanduName: '',
       training: '',
+      status: 'Aktif',
       photo: null
     });
     setPhotoPreview(null);
@@ -261,6 +286,9 @@ function DataKader() {
       ...prev,
       [field]: value
     }));
+
+
+
 
     // Clear error for this field when user starts typing
     if (formErrors[field]) {
@@ -303,10 +331,28 @@ function DataKader() {
 
     try {
       clearError();
-      const response = await post('/api/kaders', formData);
+      
+      // Use FormData if there's a photo file
+      let dataToSend = formData;
+      if (formData.photo instanceof File) {
+        const formDataObj = new FormData();
+        Object.keys(formData).forEach(key => {
+          if (key === 'photo' && formData[key] instanceof File) {
+            formDataObj.append(key, formData[key]);
+          } else {
+            formDataObj.append(key, formData[key]);
+          }
+        });
+        for (var key of formDataObj.entries()) {
+          console.log(key[0] + ', ' + key[1]);
+        }
+        dataToSend = formDataObj;
+      }
+      
+      const response = await post('/kader', dataToSend);
 
-      if (response.data) {
-        setKaders(prev => [...prev, response.data]);
+      if (response) {
+        setKaders(prev => [...prev, response]);
         setShowAddModal(false);
         setSuccessMessage('Kader berhasil ditambahkan');
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -318,6 +364,9 @@ function DataKader() {
 
   const handleUpdateKader = async (e) => {
     e.preventDefault();
+    console.log(formData)
+
+    
 
     if (!validateForm()) {
       return;
@@ -325,11 +374,27 @@ function DataKader() {
 
     try {
       clearError();
-      const response = await put(`/api/kaders/${selectedKader.id}`, formData);
+      
+      
+      // Use FormData if there's a photo file
+      let dataToSend = formData;
+      if (formData.photo instanceof File) {
+        const formDataObj = new FormData();
+        Object.keys(formData).forEach(key => {
+          if (key === 'photo' && formData[key] instanceof File) {
+            formDataObj.append(key, formData[key]);
+          } else {
+            formDataObj.append(key, formData[key]);
+          }
+        });
+        dataToSend = formDataObj;
+      }
+      
+      const response = await put(`/kader/${selectedKader.id}`, dataToSend);
 
-      if (response.data) {
+      if (response) {
         setKaders(prev => prev.map(k =>
-          k.id === selectedKader.id ? response.data : k
+          k.id === selectedKader.id ? response : k
         ));
         setShowEditModal(false);
         setSuccessMessage('Data kader berhasil diperbarui');
@@ -338,24 +403,6 @@ function DataKader() {
     } catch (err) {
       console.error('Error updating kader:', err);
     }
-  };
-
-  const KaderModal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content kader-modal" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h3 className="modal-title">{title}</h3>
-            <button className="modal-close" onClick={onClose}>×</button>
-          </div>
-          <div className="modal-body">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
   };
 
   const handleMenuClick = (item) => {
@@ -475,7 +522,7 @@ function DataKader() {
                     <Person />
                   </div>
                   <div className="stat-value">
-                    {kaders.filter(k => k.status === 'Aktif').length}
+                    {kaders.filter(k => (k.status || 'Aktif') === 'Aktif').length}
                   </div>
                   <div className="stat-label">Kader Aktif</div>
                 </div>
@@ -601,8 +648,8 @@ function DataKader() {
                               </div>
                             </td>
                             <td>
-                              <span className={`status-badge ${kader.status === 'Aktif' ? 'active' : 'inactive'}`}>
-                                {kader.status}
+                              <span className={`status-badge ${(kader.status || 'Aktif') === 'Aktif' ? 'active' : 'inactive'}`}>
+                                {kader.status || 'Aktif'}
                               </span>
                             </td>
                             <td>
@@ -668,8 +715,8 @@ function DataKader() {
               <div>
                 <h3>{selectedKader.name}</h3>
                 <p>NIK: {selectedKader.nik}</p>
-                <span className={`status-badge ${selectedKader.status === 'Aktif' ? 'active' : 'inactive'}`}>
-                  {selectedKader.status}
+                <span className={`status-badge ${(selectedKader.status || 'Aktif') === 'Aktif' ? 'active' : 'inactive'}`}>
+                  {selectedKader.status || 'Aktif'}
                 </span>
               </div>
             </div>
@@ -814,6 +861,16 @@ function DataKader() {
                 <option value="S3">S3</option>
               </select>
               {formErrors.education && <span className="error-message">{formErrors.education}</span>}
+            </div>
+            <div className="form-group">
+              <label>Status Kader</label>
+              <select
+                value={formData.status}
+                onChange={(e) => handleFormChange('status', e.target.value)}
+              >
+                <option value="Aktif">Aktif</option>
+                <option value="Tidak Aktif">Tidak Aktif</option>
+              </select>
             </div>
             <div className="form-group">
               <label>Nomor Handphone *</label>
@@ -1018,6 +1075,16 @@ function DataKader() {
                   <option value="S3">S3</option>
                 </select>
                 {formErrors.education && <span className="error-message">{formErrors.education}</span>}
+              </div>
+              <div className="form-group">
+                <label>Status Kader</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => handleFormChange('status', e.target.value)}
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
               </div>
               <div className="form-group">
                 <label>Nomor Handphone *</label>

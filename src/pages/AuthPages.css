@@ -117,6 +117,15 @@
   margin-top: 0.25rem;
 }
 
+.general-error {
+  text-align: center;
+  background: #ffeaea;
+  border: 1px solid #ffcccc;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
 .password-input-container {
   position: relative;
   display: flex;
