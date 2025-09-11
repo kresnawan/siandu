@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
         if (requireAdmin) {
           try {
             const user = JSON.parse(userData);
-            setIsAdmin(user.role === 3421);
+            setIsAdmin(user.role === 3422);
           } catch (error) {
             console.error('Error parsing user data:', error);
             setIsAuthenticated(false);

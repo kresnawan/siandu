@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 
 const Navbar = () => {
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+
+  
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -18,6 +23,27 @@ const Navbar = () => {
   const isActive = (path) => {
     return location.pathname === path;
   };
+
+  useEffect(() =>{
+    const setAuth = () =>{
+      const authStatus = localStorage.getItem('isAuthenticated');
+  const userData = localStorage.getItem('user');
+
+  
+
+  if (authStatus === 'true' && userData) {
+    const user = JSON.parse(userData);
+    setIsLoggedIn(true);
+    if(user.role === 3422) {
+      setIsAdmin(true);
+    }
+  } else {
+    setIsLoggedIn(false);
+  }
+    }
+
+    setAuth();
+  })
 
   return (
     <nav className="navbar">
@@ -48,26 +74,19 @@ const Navbar = () => {
             >
               Beranda
             </Link>
-            <Link
+            {isAdmin === true && <Link
               to="/dashboard"
               className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
               onClick={closeMenu}
             >
               Dashboard
-            </Link>
+            </Link>}
             <Link
               to="/login"
               className={`nav-link ${isActive('/login') ? 'active' : ''}`}
               onClick={closeMenu}
             >
               Masuk
-            </Link>
-            <Link 
-              to="/register" 
-              className={`nav-link ${isActive('/register') ? 'active' : ''}`}
-              onClick={closeMenu}
-            >
-              Daftar
             </Link>
             <Link 
               to="/faq" 

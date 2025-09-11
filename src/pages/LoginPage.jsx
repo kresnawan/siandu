@@ -66,7 +66,7 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await post('/auth/login', formData);
+      const response = await post('/login', formData);
 
       // Check if login was successful
       if (response && response.id) {
