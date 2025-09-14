@@ -1,0 +1,151 @@
+/* Shared Sidebar Styles */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--gray-light);
+}
+
+/* Sidebar Styles */
+.dashboard-sidebar {
+  width: 280px;
+  background: var(--white);
+  border-right: 1px solid var(--gray-light);
+  padding: 2rem 0;
+  position: fixed;
+  left: 0;
+  height: calc(100vh);
+  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+  padding: 0 2rem 2rem;
+  border-bottom: 1px solid var(--gray-light);
+  margin-bottom: 2rem;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.sidebar-logo-icon {
+  font-size: 2rem;
+  color: var(--primary);
+}
+
+.sidebar-logo-text h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.sidebar-logo-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.sidebar-menu {
+  padding: 0 1rem;
+}
+
+.menu-section {
+  margin-bottom: 2rem;
+}
+
+.menu-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  margin-bottom: 0.25rem;
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: var(--text-dark);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.menu-link:hover {
+  background: var(--accent);
+  color: var(--primary-dark);
+}
+
+.menu-link.active {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.menu-icon {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-text {
+  font-size: 0.9rem;
+}
+
+/* Main Content */
+.dashboard-main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .dashboard-main {
+    margin-left: 0;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-logo-text h3 {
+    font-size: 1.2rem;
+  }
+
+  .sidebar-logo-text p {
+    font-size: 0.75rem;
+  }
+}

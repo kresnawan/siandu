@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dashboard as DashboardIcon,
   People,
@@ -39,6 +40,7 @@ import {
 import './DataPasien.css';
 import useApi from '../../hooks/useApi';
 import { validatePatientForm, formatPhoneNumber, formatNIK } from '../../utils/validation';
+import Sidebar from '../../components/Sidebar';
 
 const PatientModal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -75,7 +77,6 @@ const PatientModal = ({ isOpen, onClose, title, children }) => {
 };
 
 function DataPasien() {
-  const [activeMenu, setActiveMenu] = useState('patients');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [patients, setPatients] = useState([]);
@@ -98,58 +99,6 @@ function DataPasien() {
 
   const { loading, error, get, post, put, delete: del, clearError } = useApi();
 
-  const menuItems = [
-    {
-      section: 'Utama',
-      items: [
-        { id: 'dashboard', icon: DashboardIcon, label: 'Dashboard', path: '/dashboard' },
-        { id: 'analytics', icon: Analytics, label: 'Analitik' },
-        { id: 'reports', icon: Report, label: 'Laporan' }
-      ]
-    },
-    {
-      section: 'Manajemen Kader',
-      items: [
-        { id: 'kaders', icon: People, label: 'Data Kader', path: '/dashboard/kaders' },
-        { id: 'add-kader', icon: PersonAdd, label: 'Tambah Kader' },
-        { id: 'kader-training', icon: MenuBook, label: 'Pelatihan Kader' }
-      ]
-    },
-    {
-      section: 'Manajemen Pasien',
-      items: [
-        { id: 'patients', icon: People, label: 'Data Pasien', active: true },
-        { id: 'add-patient', icon: PersonAdd, label: 'Tambah Pasien' },
-        { id: 'medical-records', icon: MenuBook, label: 'Rekam Medis' }
-      ]
-    },
-    {
-      section: 'Pemeriksaan Kesehatan',
-      items: [
-        { id: 'examinations', icon: MedicalServices, label: 'Pemeriksaan', path: '/dashboard/examinations' },
-        { id: 'add-examination', icon: PersonAdd, label: 'Tambah Pemeriksaan' },
-        { id: 'monthly-reports', icon: Assessment, label: 'Laporan Bulanan' }
-      ]
-    },
-    {
-      section: 'Layanan Kesehatan',
-      items: [
-        { id: 'health-services', icon: MedicalServices, label: 'Layanan Kesehatan' },
-        { id: 'vaccinations', icon: Vaccines, label: 'Vaksinasi' },
-        { id: 'appointments', icon: EventNote, label: 'Jadwal Kunjungan' },
-        { id: 'emergency', icon: LocalHospital, label: 'Darurat' }
-      ]
-    },
-    {
-      section: 'Administrasi',
-      items: [
-        { id: 'schedule', icon: Schedule, label: 'Jadwal Kerja' },
-        { id: 'inventory', icon: Assignment, label: 'Inventaris' },
-        { id: 'settings', icon: Settings, label: 'Pengaturan' }
-      ]
-    }
-  ];
-
   // Load patients data on component mount
   useEffect(() => {
     loadPatients();
@@ -158,7 +107,7 @@ function DataPasien() {
   const loadPatients = async () => {
     try {
       clearError();
-      const response = await get('/api/patients');
+      const response = await get('/patients');
       console.log('Patients loaded:', response);
   
       const patientsWithDefaults = (response || []).map(patient => ({
@@ -182,7 +131,7 @@ function DataPasien() {
 
     try {
       clearError();
-      const response = await get('/pasien/search', { q: query });
+      const response = await get('/patients/search', { q: query });
       setPatients(response.data || []);
     } catch (err) {
       console.error('Error searching patients:', err);
@@ -250,7 +199,7 @@ function DataPasien() {
         if (window.confirm('Apakah Anda yakin ingin menghapus data pasien ini?')) {
           try {
             clearError();
-            await del(`/pasien/${patientId}`);
+            await del(`/patients/${patientId}`);
             setPatients(patients.filter(p => p.id !== patientId));
             setSuccessMessage('Data pasien berhasil dihapus');
             setTimeout(() => setSuccessMessage(''), 3000);
@@ -313,7 +262,7 @@ function DataPasien() {
 
     try {
       clearError();
-      const response = await post('/pasien', formData);
+      const response = await post('/patients', formData);
       await loadPatients();
 
       if (response.data) {
@@ -337,7 +286,7 @@ function DataPasien() {
 
     try {
       clearError();
-      const response = await put(`/pasien/${selectedPatient.id}`, formData);
+      const response = await put(`/patients/${selectedPatient.id}`, formData);
       await loadPatients();
 
       if (response.data) {
@@ -356,64 +305,9 @@ function DataPasien() {
 
 
   return (
+    <Sidebar>
     <div className="data-pasien-page">
       <div className="data-pasien-container">
-        {/* Sidebar */}
-        <aside className="data-pasien-sidebar">
-          <div className="sidebar-header">
-            <div className="sidebar-logo">
-              <div className="sidebar-logo-icon">
-                <HealthAndSafety />
-              </div>
-              <div className="sidebar-logo-text">
-                <h3>Siandu</h3>
-                <p>Petugas Kesehatan</p>
-              </div>
-            </div>
-          </div>
-
-          <nav className="sidebar-menu">
-            {menuItems.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="menu-section">
-                <div className="menu-section-title">{section.section}</div>
-                <ul className="menu-list">
-                  {section.items.map((item) => (
-                    <li key={item.id} className="menu-item">
-                      <a
-                        href="#"
-                        className={`menu-link ${activeMenu === item.id ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setActiveMenu(item.id);
-                        }}
-                      >
-                        <span className="menu-icon">
-                          <item.icon />
-                        </span>
-                        <span className="menu-text">{item.label}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {/* Logout Section */}
-            <div className="menu-section">
-              <ul className="menu-list">
-                <li className="menu-item">
-                  <a href="#" className="menu-link">
-                    <span className="menu-icon">
-                      <Logout />
-                    </span>
-                    <span className="menu-text">Keluar</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </nav>
-        </aside>
-
         {/* Main Content */}
         <main className="data-pasien-main">
           {/* Header */}
@@ -911,6 +805,7 @@ function DataPasien() {
         )}
       </PatientModal>
     </div>
+    </Sidebar>
   );
 }
 

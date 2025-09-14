@@ -1,17 +1,17 @@
-/* PemeriksaanKesehatan Styles */
-.pemeriksaan-kesehatan-page {
+/* JadwalPemeriksaan Styles */
+.jadwal-pemeriksaan-page {
   min-height: 100vh;
   background: var(--gray-light);
   display: flex;
 }
 
-.pemeriksaan-kesehatan-container {
+.jadwal-pemeriksaan-container {
   display: flex;
   width: 100%;
 }
 
 /* Sidebar Styles */
-.pemeriksaan-kesehatan-sidebar {
+.jadwal-pemeriksaan-sidebar {
   width: 280px;
   background: var(--white);
   border-right: 1px solid var(--gray-light);
@@ -125,14 +125,14 @@
 }
 
 /* Main Content Area */
-.pemeriksaan-kesehatan-main {
+.jadwal-pemeriksaan-main {
   flex: 1;
   background: var(--gray-light);
   min-height: calc(100vh - 80px);
 }
 
 /* Header Section */
-.pemeriksaan-kesehatan-header {
+.jadwal-pemeriksaan-header {
   background: linear-gradient(
     135deg,
     var(--accent) 0%,
@@ -216,8 +216,8 @@
   font-weight: 500;
 }
 
-/* Examination Management Section */
-.examination-management-section {
+/* Schedule Management Section */
+.schedule-management-section {
   padding: 60px 0;
   background: var(--gray-light);
 }
@@ -229,11 +229,6 @@
   margin-bottom: 2rem;
 }
 
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
-
 .section-title {
   font-size: 2rem;
   font-weight: 700;
@@ -241,7 +236,7 @@
   margin: 0;
 }
 
-.btn-add-examination {
+.btn-add-schedule {
   background: var(--primary);
   color: var(--white);
   border: none;
@@ -255,7 +250,7 @@
   transition: all 0.3s ease;
 }
 
-.btn-add-examination:hover {
+.btn-add-schedule:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(94, 147, 108, 0.3);
@@ -308,8 +303,8 @@
   cursor: pointer;
 }
 
-/* Examination Table */
-.examination-table-container {
+/* Schedule Table */
+.schedule-table-container {
   background: var(--white);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -317,23 +312,23 @@
   overflow: hidden;
 }
 
-.examination-table-wrapper {
+.schedule-table-wrapper {
   overflow-x: auto;
 }
 
-.examination-table {
+.schedule-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.examination-table th,
-.examination-table td {
+.schedule-table th,
+.schedule-table td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid var(--gray-light);
 }
 
-.examination-table th {
+.schedule-table th {
   background: var(--accent);
   color: var(--primary-dark);
   font-weight: 600;
@@ -342,7 +337,7 @@
   letter-spacing: 0.5px;
 }
 
-.examination-table tbody tr:hover {
+.schedule-table tbody tr:hover {
   background: var(--gray-light);
 }
 
@@ -370,126 +365,73 @@
   margin-bottom: 0.25rem;
 }
 
-.patient-nik {
+.patient-phone {
+  font-size: 0.8rem;
+  color: var(--gray);
+  margin-bottom: 0.25rem;
+}
+
+.patient-address {
   font-size: 0.8rem;
   color: var(--gray);
 }
 
-.measurement-info {
+.schedule-datetime {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.weight-height {
+.schedule-date, .schedule-time {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.9rem;
-  color: var(--primary-dark);
-  font-weight: 500;
+  color: var(--text-dark);
 }
 
-.blood-pressure {
+.schedule-date {
+  font-weight: 600;
+}
+
+.visit-type {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.9rem;
-  color: var(--primary-dark);
-  font-weight: 500;
+  color: var(--text-dark);
 }
 
-.nutrition-status {
+.status-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
   text-transform: uppercase;
-  text-align: center;
 }
 
-.nutrition-status.kurus {
-  background: rgba(255, 152, 0, 0.1);
-  color: #ff9800;
-}
-
-.nutrition-status.normal {
-  background: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
-}
-
-.nutrition-status.gemuk {
-  background: rgba(255, 152, 0, 0.1);
-  color: #ff9800;
-}
-
-.nutrition-status.obesitas {
-  background: rgba(244, 67, 54, 0.1);
-  color: #f44336;
-}
-
-.health-conditions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.condition-tag {
-  padding: 0.2rem 0.5rem;
-  background: rgba(244, 67, 54, 0.1);
-  color: #f44336;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.bmi-info {
-  text-align: center;
-}
-
-.bmi-value {
-  font-weight: 600;
-  color: var(--primary-dark);
-  font-size: 1rem;
-}
-
-.blood-pressure, .blood-sugar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--primary-dark);
-  font-weight: 500;
-}
-
-.blood-pressure > div, .blood-sugar > div {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.status-tag {
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.status-tag.rendah {
+.status-badge.scheduled {
   background: rgba(33, 150, 243, 0.1);
   color: #2196f3;
 }
 
-.status-tag.normal {
+.status-badge.completed {
   background: rgba(76, 175, 80, 0.1);
   color: #4caf50;
 }
 
-.status-tag.tinggi {
+.status-badge.cancelled {
   background: rgba(244, 67, 54, 0.1);
   color: #f44336;
+}
+
+.schedule-notes {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .action-buttons {
@@ -594,14 +536,10 @@
   background: var(--white);
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 800px;
+  max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-}
-
-.examination-modal {
-  max-width: 900px;
 }
 
 .modal-header {
@@ -644,72 +582,62 @@
   padding: 2rem;
 }
 
-/* Monthly Report Styles */
-.monthly-report {
-  max-width: 100%;
-}
-
-.report-content {
-  width: 100%;
-}
-
-.report-header {
+/* Schedule Detail Styles */
+.schedule-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 2rem;
-  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--accent);
 }
 
-.report-header h3 {
+.patient-avatar-large {
+  width: 80px;
+  height: 80px;
+  background: var(--primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 2rem;
+}
+
+.schedule-detail-header h3 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: var(--primary-dark);
 }
 
-.report-header p {
-  margin: 0;
-  color: var(--gray);
-  font-size: 1.1rem;
+.schedule-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
-.report-table-container {
-  overflow-x: auto;
-  margin-bottom: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.monthly-report-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--white);
-}
-
-.monthly-report-table th,
-.monthly-report-table td {
-  padding: 0.75rem;
-  text-align: center;
-  border: 1px solid var(--gray-light);
-}
-
-.monthly-report-table th {
-  background: var(--primary);
-  color: var(--white);
-  font-weight: 600;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-}
-
-.monthly-report-table tbody tr:nth-child(even) {
-  background: var(--gray-light);
-}
-
-.monthly-report-table tbody tr:hover {
-  background: rgba(94, 147, 108, 0.1);
-}
-
-.report-actions {
+.detail-item {
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-item label {
+  font-weight: 600;
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-item p {
+  margin: 0;
+  color: var(--text-dark);
+  line-height: 1.5;
 }
 
 /* Message Styles */
@@ -745,7 +673,7 @@
 }
 
 /* Form Styles */
-.examination-form {
+.schedule-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -859,33 +787,24 @@
   .form-grid {
     grid-template-columns: 1fr;
   }
-
-  .monthly-report-table {
-    font-size: 0.8rem;
-  }
-
-  .monthly-report-table th,
-  .monthly-report-table td {
-    padding: 0.5rem;
-  }
 }
 
 @media (max-width: 768px) {
-  .pemeriksaan-kesehatan-page {
+  .jadwal-pemeriksaan-page {
     padding-top: 70px;
   }
 
-  .pemeriksaan-kesehatan-sidebar {
+  .jadwal-pemeriksaan-sidebar {
     width: 250px;
     top: 70px;
     height: calc(100vh - 70px);
   }
 
-  .pemeriksaan-kesehatan-main {
+  .jadwal-pemeriksaan-main {
     margin-left: 250px;
   }
 
-  .pemeriksaan-kesehatan-header {
+  .jadwal-pemeriksaan-header {
     padding: 50px 0 30px;
   }
 
@@ -898,7 +817,7 @@
   }
 
   .stats-section,
-  .examination-management-section {
+  .schedule-management-section {
     padding: 50px 0;
   }
 
@@ -913,11 +832,6 @@
     gap: 1rem;
   }
 
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .search-filter-container {
     flex-direction: column;
   }
@@ -929,14 +843,10 @@
   .modal-content {
     max-height: 95vh;
   }
-
-  .monthly-report-table {
-    font-size: 0.75rem;
-  }
 }
 
 @media (max-width: 480px) {
-  .pemeriksaan-kesehatan-sidebar {
+  .jadwal-pemeriksaan-sidebar {
     width: 100%;
     position: relative;
     top: auto;
@@ -945,11 +855,11 @@
     border-bottom: 1px solid var(--gray-light);
   }
 
-  .pemeriksaan-kesehatan-main {
+  .jadwal-pemeriksaan-main {
     margin-left: 0;
   }
 
-  .pemeriksaan-kesehatan-header {
+  .jadwal-pemeriksaan-header {
     padding: 40px 0 25px;
   }
 
@@ -962,7 +872,7 @@
   }
 
   .stats-section,
-  .examination-management-section {
+  .schedule-management-section {
     padding: 40px 0;
   }
 
@@ -970,8 +880,8 @@
     padding: 1.5rem;
   }
 
-  .examination-table th,
-  .examination-table td {
+  .schedule-table th,
+  .schedule-table td {
     padding: 0.75rem 0.5rem;
   }
 
@@ -1005,33 +915,352 @@
   .btn-primary, .btn-secondary {
     width: 100%;
   }
+}
 
-  .report-actions {
-    flex-direction: column;
+/* Calendar Styles */
+.calendar-section {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.calendar-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--gray-light);
+  background: var(--white);
+}
+
+.btn-toggle-calendar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-calendar:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.calendar-container {
+  padding: 1.5rem 2rem 2rem;
+  background: var(--white);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.calendar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.calendar-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--gray-light);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-dark);
+}
+
+.calendar-nav-btn:hover {
+  background: var(--primary);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.calendar-today-btn {
+  padding: 0.5rem 1rem;
+  background: var(--success);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calendar-today-btn:hover {
+  background: var(--success-dark);
+  transform: translateY(-1px);
+}
+
+.calendar-clear-btn {
+  padding: 0.5rem 1rem;
+  background: var(--danger);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calendar-clear-btn:hover {
+  background: var(--danger-dark);
+  transform: translateY(-1px);
+}
+
+.calendar-grid {
+  background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--primary);
+  color: var(--white);
+}
+
+.calendar-weekday {
+  padding: 1rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--gray-light);
+}
+
+.calendar-day {
+  min-height: 120px;
+  background: var(--white);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.calendar-day:hover {
+  background: var(--gray-light);
+  border-color: var(--primary);
+}
+
+.calendar-day-empty {
+  background: var(--gray-light);
+  cursor: default;
+}
+
+.calendar-day-empty:hover {
+  background: var(--gray-light);
+  border-color: transparent;
+}
+
+.calendar-day-today {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.calendar-day-today .calendar-day-number {
+  background: var(--primary);
+  color: var(--white);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.calendar-day-selected {
+  background: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.calendar-day-selected .calendar-day-number {
+  background: var(--primary);
+  color: var(--white);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.calendar-day-number {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.calendar-day-schedules {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar-schedule-item {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.calendar-schedule-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-schedule-more {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 2px 6px;
+}
+
+/* Status colors for calendar */
+.status-scheduled {
+  background: var(--warning);
+  color: var(--white);
+}
+
+.status-completed {
+  background: var(--success);
+  color: var(--white);
+}
+
+.status-cancelled {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.status-postponed {
+  background: var(--info);
+  color: var(--white);
+}
+
+.status-default {
+  background: var(--gray);
+  color: var(--white);
+}
+
+/* Responsive Calendar */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 1rem;
+  }
+  
+  .calendar-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .calendar-title {
+    font-size: 1.2rem;
+    order: -1;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .calendar-day {
+    min-height: 80px;
+    padding: 0.25rem;
+  }
+  
+  .calendar-day-number {
+    font-size: 0.8rem;
+  }
+  
+  .calendar-schedule-item {
+    font-size: 0.7rem;
+    padding: 1px 4px;
+  }
+  
+  .calendar-weekday {
+    padding: 0.75rem 0.25rem;
+    font-size: 0.8rem;
   }
 }
 
-/* Print Styles */
-@media print {
-  .pemeriksaan-kesehatan-sidebar,
-  .modal-overlay,
-  .modal-close,
-  .form-actions,
-  .action-buttons,
-  .header-actions {
-    display: none !important;
-  }
+/* Date Filter Indicator */
+.management-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-  .pemeriksaan-kesehatan-main {
-    margin-left: 0 !important;
-  }
+.date-filter-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--primary-dark);
+  font-weight: 500;
+}
 
-  .monthly-report-table {
-    font-size: 12px;
-  }
+.clear-date-filter-btn {
+  background: var(--danger);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
 
-  .monthly-report-table th,
-  .monthly-report-table td {
-    padding: 8px;
-  }
+.clear-date-filter-btn:hover {
+  background: var(--danger-dark);
+  transform: scale(1.1);
 }

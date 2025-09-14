@@ -13,6 +13,7 @@ import DataPasien from './pages/petugas/DataPasien';
 import DataKader from './pages/petugas/DataKader';
 import PemeriksaanKesehatan from './pages/petugas/PemeriksaanKesehatan';
 import VaccinationPage from './pages/petugas/VaccinationPage';
+import JadwalPemeriksaan from './pages/petugas/JadwalPemeriksaan';
 
 
 function AppLayout() {
@@ -30,6 +31,7 @@ function AppLayout() {
           <Route path="/dashboard/kaders" element={<DataKader />} />
           <Route path="/dashboard/examinations" element={<PemeriksaanKesehatan />} />
           <Route path="/dashboard/vaccinations" element={<VaccinationPage />} />
+          <Route path="/dashboard/schedulevisit" element={<JadwalPemeriksaan />} />
         </Routes>
       </ProtectedRoute>
     );

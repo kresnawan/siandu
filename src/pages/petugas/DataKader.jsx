@@ -42,6 +42,7 @@ import {
 import './DataKader.css';
 import useApi from '../../hooks/useApi';
 import { validateKaderForm, formatPhoneNumber, formatNIK } from '../../utils/validation';
+import Sidebar from '../../components/Sidebar';
 const KaderModal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
@@ -414,64 +415,9 @@ function DataKader() {
   };
 
   return (
+    <Sidebar>
     <div className="data-kader-page">
       <div className="data-kader-container">
-        {/* Sidebar */}
-        <aside className="data-kader-sidebar">
-          <div className="sidebar-header">
-            <div className="sidebar-logo">
-              <div className="sidebar-logo-icon">
-                <HealthAndSafety />
-              </div>
-              <div className="sidebar-logo-text">
-                <h3>Siandu</h3>
-                <p>Petugas Kesehatan</p>
-              </div>
-            </div>
-          </div>
-
-          <nav className="sidebar-menu">
-            {menuItems.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="menu-section">
-                <div className="menu-section-title">{section.section}</div>
-                <ul className="menu-list">
-                  {section.items.map((item) => (
-                    <li key={item.id} className="menu-item">
-                      <a
-                        href="#"
-                        className={`menu-link ${activeMenu === item.id ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleMenuClick(item);
-                        }}
-                      >
-                        <span className="menu-icon">
-                          <item.icon />
-                        </span>
-                        <span className="menu-text">{item.label}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {/* Logout Section */}
-            <div className="menu-section">
-              <ul className="menu-list">
-                <li className="menu-item">
-                  <a href="#" className="menu-link">
-                    <span className="menu-icon">
-                      <Logout />
-                    </span>
-                    <span className="menu-text">Keluar</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </nav>
-        </aside>
-
         {/* Main Content */}
         <main className="data-kader-main">
           {/* Header */}
@@ -695,6 +641,7 @@ function DataKader() {
           </section>
         </main>
       </div>
+    </div>
 
       {/* View Kader Modal */}
       <KaderModal
@@ -1206,7 +1153,7 @@ function DataKader() {
           </form>
         )}
       </KaderModal>
-    </div>
+    </Sidebar>
   );
 }
 

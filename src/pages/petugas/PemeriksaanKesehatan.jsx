@@ -48,6 +48,7 @@ import {
 } from '@mui/icons-material';
 import './PemeriksaanKesehatan.css';
 import useApi from '../../hooks/useApi';
+import Sidebar from '../../components/Sidebar';
 
 const ExaminationModal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -83,6 +84,7 @@ function PemeriksaanKesehatan() {
     height: '',
     blood_pressure_systolic: '',
     blood_pressure_diastolic: '',
+    blood_sugar: '',
     nutrition_status: '',
     hypertension: '',
     diabetes: '',
@@ -186,6 +188,11 @@ function PemeriksaanKesehatan() {
       // Map patient_id to patientName by finding patient details
       const mappedExams = examData.map(exam => {
         const patient = patients.find(p => p.id === exam.patient_id);
+        const bmi = calculateBMI(exam.weight, exam.height);
+        const bloodPressureStatus = getBloodPressureStatus(exam.blood_pressure_systolic, exam.blood_pressure_diastolic);
+        const bloodSugarStatus = getBloodSugarStatus(exam.blood_sugar);
+        const cholesterolStatus = getCholesterolStatus(exam.high_cholesterol);
+        
         return {
           ...exam,
           patientId: exam.patient_id,
@@ -194,6 +201,11 @@ function PemeriksaanKesehatan() {
           exam_date: new Date(exam.exam_date).toISOString().split('T')[0],
           bloodPressureSystolic: exam.blood_pressure_systolic,
           bloodPressureDiastolic: exam.blood_pressure_diastolic,
+          bloodSugar: exam.blood_sugar,
+          bmi: bmi,
+          bloodPressureStatus: bloodPressureStatus,
+          bloodSugarStatus: bloodSugarStatus,
+          cholesterolStatus: cholesterolStatus,
           nutritionStatus: exam.nutrition_status,
           hypertension: exam.hypertension ? 'Ya' : 'Tidak',
           diabetes: exam.diabetes ? 'Ya' : 'Tidak',
@@ -263,6 +275,7 @@ function PemeriksaanKesehatan() {
       height: '',
       blood_pressure_systolic: '',
       blood_pressure_diastolic: '',
+      blood_sugar: '',
       nutrition_status: '',
       hypertension: '',
       diabetes: '',
@@ -300,6 +313,12 @@ function PemeriksaanKesehatan() {
   };
 
 
+  const calculateBMI = (weight, height) => {
+    if (!weight || !height) return null;
+    const heightInMeters = height / 100;
+    return (weight / (heightInMeters * heightInMeters)).toFixed(1);
+  };
+
   const calculateNutritionStatus = (weight, height) => {
     if (!weight || !height) return '';
 
@@ -310,6 +329,36 @@ function PemeriksaanKesehatan() {
     if (bmi < 25) return 'NORMAL';
     if (bmi < 30) return 'GEMUK';
     return 'OBESITAS';
+  };
+
+  const getBloodPressureStatus = (systolic, diastolic) => {
+    if (!systolic || !diastolic) return '';
+    
+    const sys = parseInt(systolic);
+    const dia = parseInt(diastolic);
+    
+    if (sys < 90 || dia < 60) return 'RENDAH';
+    if (sys >= 140 || dia >= 90) return 'TINGGI';
+    return 'NORMAL';
+  };
+
+  const getBloodSugarStatus = (bloodSugar) => {
+    if (!bloodSugar) return '';
+    
+    const sugar = parseInt(bloodSugar);
+    
+    if (sugar < 70) return 'RENDAH';
+    if (sugar > 140) return 'TINGGI';
+    return 'NORMAL';
+  };
+
+  const getCholesterolStatus = (cholesterol) => {
+    if (!cholesterol) return '';
+    
+    const chol = parseInt(cholesterol);
+    
+    if (chol > 200) return 'TINGGI';
+    return 'NORMAL';
   };
 
   const handleWeightHeightChange = () => {
@@ -444,64 +493,9 @@ function PemeriksaanKesehatan() {
   };
 
   return (
+    <Sidebar>
     <div className="pemeriksaan-kesehatan-page">
       <div className="pemeriksaan-kesehatan-container">
-        {/* Sidebar */}
-        <aside className="pemeriksaan-kesehatan-sidebar">
-          <div className="sidebar-header">
-            <div className="sidebar-logo">
-              <div className="sidebar-logo-icon">
-                <HealthAndSafety />
-              </div>
-              <div className="sidebar-logo-text">
-                <h3>Siandu</h3>
-                <p>Petugas Kesehatan</p>
-              </div>
-            </div>
-          </div>
-
-          <nav className="sidebar-menu">
-            {menuItems.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="menu-section">
-                <div className="menu-section-title">{section.section}</div>
-                <ul className="menu-list">
-                  {section.items.map((item) => (
-                    <li key={item.id} className="menu-item">
-                      <a
-                        href="#"
-                        className={`menu-link ${activeMenu === item.id ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleMenuClick(item);
-                        }}
-                      >
-                        <span className="menu-icon">
-                          <item.icon />
-                        </span>
-                        <span className="menu-text">{item.label}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {/* Logout Section */}
-            <div className="menu-section">
-              <ul className="menu-list">
-                <li className="menu-item">
-                  <a href="#" className="menu-link">
-                    <span className="menu-icon">
-                      <Logout />
-                    </span>
-                    <span className="menu-text">Keluar</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </nav>
-        </aside>
-
         {/* Main Content */}
         <main className="pemeriksaan-kesehatan-main">
           {/* Header */}
@@ -626,7 +620,9 @@ function PemeriksaanKesehatan() {
                           <th>Nama Pasien</th>
                           <th>Tanggal</th>
                           <th>Berat/Tinggi</th>
+                          <th>IMT</th>
                           <th>Tekanan Darah</th>
+                          <th>Gula Darah</th>
                           <th>Status Gizi</th>
                           <th>Kondisi Kesehatan</th>
                           <th>Aksi</th>
@@ -656,9 +652,32 @@ function PemeriksaanKesehatan() {
                               </div>
                             </td>
                             <td>
+                              <div className="bmi-info">
+                                <div className="bmi-value">
+                                  {exam.bmi || 'N/A'}
+                                </div>
+                              </div>
+                            </td>
+                            <td>
                               <div className="blood-pressure">
                                 <Favorite fontSize="small" />
-                                {exam.bloodPressureSystolic}/{exam.bloodPressureDiastolic} mmHg
+                                <div>
+                                  <div>{exam.bloodPressureSystolic}/{exam.bloodPressureDiastolic} mmHg</div>
+                                  <div className={`status-tag ${exam.bloodPressureStatus?.toLowerCase()}`}>
+                                    {exam.bloodPressureStatus || 'N/A'}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="blood-sugar">
+                                <Bloodtype fontSize="small" />
+                                <div>
+                                  <div>{exam.bloodSugar || 'N/A'} mg/dL</div>
+                                  <div className={`status-tag ${exam.bloodSugarStatus?.toLowerCase()}`}>
+                                    {exam.bloodSugarStatus || 'N/A'}
+                                  </div>
+                                </div>
                               </div>
                             </td>
                             <td>
@@ -696,6 +715,7 @@ function PemeriksaanKesehatan() {
                                       height: exam.height,
                                       blood_pressure_systolic: exam.blood_pressure_systolic || exam.bloodPressureSystolic,
                                       blood_pressure_diastolic: exam.blood_pressure_diastolic || exam.bloodPressureDiastolic,
+                                      blood_sugar: exam.blood_sugar || exam.bloodSugar,
                                       nutrition_status: exam.nutrition_status || exam.nutritionStatus,
                                       hypertension: exam.hypertension,
                                       diabetes: exam.diabetes,
@@ -741,6 +761,7 @@ function PemeriksaanKesehatan() {
           </section>
         </main>
       </div>
+    </div>
 
       {/* Examination Modal */}
       <ExaminationModal
@@ -832,12 +853,52 @@ function PemeriksaanKesehatan() {
             </div>
 
             <div className="form-group">
+              <label>Gula Darah (mg/dL)</label>
+              <input
+                type="number"
+                value={examData.blood_sugar}
+                onChange={(e) => handleFormChange('blood_sugar', e.target.value)}
+                placeholder="100"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>IMT (Indeks Massa Tubuh)</label>
+              <input
+                type="text"
+                value={calculateBMI(examData.weight, examData.height) || ''}
+                readOnly
+                placeholder="Otomatis dihitung"
+              />
+            </div>
+
+            <div className="form-group">
               <label>Status Gizi</label>
               <input
                 type="text"
                 value={examData.nutrition_status}
                 readOnly
                 placeholder="Otomatis dihitung berdasarkan BMI"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Status Tekanan Darah</label>
+              <input
+                type="text"
+                value={getBloodPressureStatus(examData.blood_pressure_systolic, examData.blood_pressure_diastolic) || ''}
+                readOnly
+                placeholder="Otomatis dihitung"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Status Gula Darah</label>
+              <input
+                type="text"
+                value={getBloodSugarStatus(examData.blood_sugar) || ''}
+                readOnly
+                placeholder="Otomatis dihitung"
               />
             </div>
 
@@ -1043,7 +1104,7 @@ function PemeriksaanKesehatan() {
           })()}
         </div>
       </ExaminationModal>
-    </div>
+    </Sidebar>
   );
 }
 

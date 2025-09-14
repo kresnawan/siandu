@@ -1,11 +1,40 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check authentication status
+    const checkAuth = () => {
+      const authStatus = localStorage.getItem('isAuthenticated');
+      const user = localStorage.getItem('user');
+      
+      setIsAuthenticated(authStatus === 'true');
+      
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          setUserRole(userData.role);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    };
+
+    checkAuth();
+    
+    // Listen for storage changes (login/logout from other tabs)
+    window.addEventListener('storage', checkAuth);
+    
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -18,6 +47,22 @@ const Navbar = () => {
   const isActive = (path) => {
     return location.pathname === path;
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
+    setUserRole(null);
+    navigate('/');
+    closeMenu();
+  };
+
+  const isDashboardPage = location.pathname.startsWith('/dashboard');
+
+  // Don't show navbar on dashboard pages (they have their own sidebar)
+  if (isDashboardPage) {
+    return null;
+  }
 
   return (
     <nav className="navbar">
@@ -48,27 +93,6 @@ const Navbar = () => {
             >
               Beranda
             </Link>
-            <Link
-              to="/dashboard"
-              className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
-              onClick={closeMenu}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/login"
-              className={`nav-link ${isActive('/login') ? 'active' : ''}`}
-              onClick={closeMenu}
-            >
-              Masuk
-            </Link>
-            <Link 
-              to="/register" 
-              className={`nav-link ${isActive('/register') ? 'active' : ''}`}
-              onClick={closeMenu}
-            >
-              Daftar
-            </Link>
             <Link 
               to="/faq" 
               className={`nav-link ${isActive('/faq') ? 'active' : ''}`}
@@ -76,6 +100,15 @@ const Navbar = () => {
             >
               FAQ
             </Link>
+            {isAuthenticated && userRole === 'admin' && (
+              <Link
+                to="/dashboard"
+                className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
+                onClick={closeMenu}
+              >
+                Dashboard
+              </Link>
+            )}
           </motion.div>
 
           <motion.div
@@ -84,9 +117,25 @@ const Navbar = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Link to="/register" className="cta-button" onClick={closeMenu}>
-              Mulai Sekarang
-            </Link>
+            {isAuthenticated ? (
+              <div className="auth-buttons">
+                <span className="user-info">
+                  Selamat datang, {userRole === 'admin' ? 'Admin' : 'User'}
+                </span>
+                <button className="logout-button" onClick={handleLogout}>
+                  Keluar
+                </button>
+              </div>
+            ) : (
+              <div className="auth-buttons">
+                <Link to="/login" className="login-button" onClick={closeMenu}>
+                  Masuk
+                </Link>
+                <Link to="/register" className="register-button" onClick={closeMenu}>
+                  Daftar
+                </Link>
+              </div>
+            )}
           </motion.div>
         </div>
 

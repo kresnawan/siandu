@@ -29,6 +29,10 @@
   margin-bottom: 2rem;
 }
 
+.marginignore {
+  margin-left: 0 !important;
+}
+
 .sidebar-logo {
   display: flex;
   align-items: center;
@@ -122,6 +126,13 @@
 .menu-text {
   flex: 1;
   font-size: 0.95rem;
+}
+
+/* Main Content Area */
+.dashboard-main {
+  flex: 1;
+  background: var(--gray-light);
+  min-height: calc(100vh - 80px);
 }
 
 /* Welcome Header Section */
@@ -289,7 +300,6 @@
 /* Main Content Area */
 .dashboard-main {
   flex: 1;
-  margin-left: 280px;
   background: var(--gray-light);
   min-height: calc(100vh - 80px);
 }

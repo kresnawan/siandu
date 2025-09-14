@@ -127,7 +127,6 @@
 /* Main Content Area */
 .data-kader-main {
   flex: 1;
-  margin-left: 280px;
   background: var(--gray-light);
   min-height: calc(100vh - 80px);
 }
