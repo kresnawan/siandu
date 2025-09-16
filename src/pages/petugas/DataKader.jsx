@@ -559,7 +559,7 @@ function DataKader() {
                             <td>
                               <div className="kader-photo-cell">
                                 {kader.photo ? (
-                                  <img src={kader.photo} alt={kader.name} className="kader-photo-small" />
+                                  <img src={`http://localhost:3001/uploads/${kader.photo}`} alt={kader.name} className="kader-photo-small" />
                                 ) : (
                                   <div className="kader-photo-placeholder">
                                     <Person />

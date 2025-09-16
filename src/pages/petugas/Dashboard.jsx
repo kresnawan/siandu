@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dashboard as DashboardIcon,
@@ -22,14 +22,77 @@ import {
   MenuBook,
   Analytics,
   AccountCircle,
-  BeachAccess
+  BeachAccess,
+  ChildCare,
+  School,
+  Work,
+  Elderly,
+  Warning,
+  Favorite,
+  Visibility,
+  Hearing
 } from '@mui/icons-material';
-import './dashboard.css';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+} from 'chart.js';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import './Dashboard.css';
 import Sidebar from '../../components/Sidebar';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+);
 
 function Dashboard() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch dashboard statistics
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:3001/api/dashboard/stats', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard statistics');
+        }
+        
+        const data = await response.json();
+        setDashboardStats(data);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -49,6 +112,148 @@ function Dashboard() {
     // Redirect to login
     navigate('/login');
   };
+
+  // Chart configurations
+  const ageGroupChartData = dashboardStats ? {
+    labels: ['Balita', 'Remaja', 'Dewasa', 'Lansia'],
+    datasets: [
+      {
+        label: 'Jumlah Pemeriksaan',
+        data: [
+          dashboardStats.ageGroups.Balita || 0,
+          dashboardStats.ageGroups.Remaja || 0,
+          dashboardStats.ageGroups.Dewasa || 0,
+          dashboardStats.ageGroups.Lansia || 0
+        ],
+        backgroundColor: [
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56',
+          '#4BC0C0'
+        ],
+        borderColor: [
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56',
+          '#4BC0C0'
+        ],
+        borderWidth: 1
+      }
+    ]
+  } : null;
+
+  const healthConditionsChartData = dashboardStats ? {
+    labels: ['Hipertensi', 'Diabetes', 'Kolesterol Tinggi', 'Asam Urat Tinggi', 'Gula Darah Tinggi', 'Masalah Penglihatan', 'Masalah Pendengaran'],
+    datasets: [
+      {
+        label: 'Jumlah Kasus',
+        data: [
+          dashboardStats.healthConditions.hypertension,
+          dashboardStats.healthConditions.diabetes,
+          dashboardStats.healthConditions.highCholesterol,
+          dashboardStats.healthConditions.highUricAcid,
+          dashboardStats.healthConditions.highBloodSugar,
+          dashboardStats.healthConditions.visionProblems,
+          dashboardStats.healthConditions.hearingProblems
+        ],
+        backgroundColor: [
+          '#FF6B6B',
+          '#4ECDC4',
+          '#45B7D1',
+          '#96CEB4',
+          '#FFEAA7',
+          '#DDA0DD',
+          '#98D8C8'
+        ],
+        borderColor: [
+          '#FF6B6B',
+          '#4ECDC4',
+          '#45B7D1',
+          '#96CEB4',
+          '#FFEAA7',
+          '#DDA0DD',
+          '#98D8C8'
+        ],
+        borderWidth: 1
+      }
+    ]
+  } : null;
+
+  const monthlyTrendsChartData = dashboardStats ? {
+    labels: dashboardStats.monthlyTrends.map(trend => {
+      const [year, month] = trend.month.split('-');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${monthNames[parseInt(month) - 1]} ${year}`;
+    }).reverse(),
+    datasets: [
+      {
+        label: 'Total Pemeriksaan',
+        data: dashboardStats.monthlyTrends.map(trend => trend.total_examinations).reverse(),
+        borderColor: '#36A2EB',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        tension: 0.1
+      },
+      {
+        label: 'Pemeriksaan Selesai',
+        data: dashboardStats.monthlyTrends.map(trend => trend.completed_examinations).reverse(),
+        borderColor: '#4BC0C0',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1
+      }
+    ]
+  } : null;
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+    }
+  };
+
+  if (loading) {
+    return (
+      <Sidebar>
+        <div className="dashboard-page">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Memuat data dashboard...</p>
+          </div>
+        </div>
+      </Sidebar>
+    );
+  }
+
+  if (error) {
+    return (
+      <Sidebar>
+        <div className="dashboard-page">
+          <div className="error-container">
+            <h2>Error</h2>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Coba Lagi</button>
+          </div>
+        </div>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar>
@@ -73,35 +278,187 @@ function Dashboard() {
             {/* Statistics Section */}
             <section className="stats-section">
               <div className="container">
-                <h2 className="section-title">Ringkasan Hari Ini</h2>
+                <h2 className="section-title">Ringkasan Bulan Ini</h2>
                 <div className="stats-grid">
                   <div className="stat-card">
                     <div className="stat-icon">
                       <People />
                     </div>
-                    <div className="stat-value">247</div>
+                    <div className="stat-value">{dashboardStats?.totalPatients || 0}</div>
                     <div className="stat-label">Total Pasien</div>
                   </div>
                   <div className="stat-card">
                     <div className="stat-icon">
                       <LocalHospital />
                     </div>
-                    <div className="stat-value">42</div>
+                    <div className="stat-value">{dashboardStats?.todayStats?.total || 0}</div>
                     <div className="stat-label">Kunjungan Hari Ini</div>
                   </div>
                   <div className="stat-card">
                     <div className="stat-icon">
-                      <Vaccines />
+                      <CheckCircle />
                     </div>
-                    <div className="stat-value">18</div>
-                    <div className="stat-label">Vaksinasi Hari Ini</div>
+                    <div className="stat-value">{dashboardStats?.todayStats?.completed || 0}</div>
+                    <div className="stat-label">Pemeriksaan Selesai</div>
                   </div>
                   <div className="stat-card">
                     <div className="stat-icon">
                       <Assessment />
                     </div>
-                    <div className="stat-value">95%</div>
-                    <div className="stat-label">Tingkat Kepuasan</div>
+                    <div className="stat-value">{dashboardStats?.healthConditions?.totalExaminations || 0}</div>
+                    <div className="stat-label">Total Pemeriksaan Bulan Ini</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Age Groups Section */}
+            <section className="age-groups-section">
+              <div className="container">
+                <h2 className="section-title">Distribusi Pemeriksaan Berdasarkan Usia</h2>
+                <div className="charts-grid">
+                  <div className="chart-container">
+                    <div className="chart-card">
+                      <h3>Pemeriksaan per Kelompok Usia</h3>
+                      <div className="chart-wrapper">
+                        {ageGroupChartData && <Doughnut data={ageGroupChartData} options={doughnutOptions} />}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="age-stats-grid">
+                    <div className="age-stat-card">
+                      <div className="age-stat-icon balita">
+                        <ChildCare />
+                      </div>
+                      <div className="age-stat-content">
+                        <div className="age-stat-value">{dashboardStats?.ageGroups?.Balita || 0}</div>
+                        <div className="age-stat-label">Balita (0-4 tahun)</div>
+                      </div>
+                    </div>
+                    <div className="age-stat-card">
+                      <div className="age-stat-icon remaja">
+                        <School />
+                      </div>
+                      <div className="age-stat-content">
+                        <div className="age-stat-value">{dashboardStats?.ageGroups?.Remaja || 0}</div>
+                        <div className="age-stat-label">Remaja (5-17 tahun)</div>
+                      </div>
+                    </div>
+                    <div className="age-stat-card">
+                      <div className="age-stat-icon dewasa">
+                        <Work />
+                      </div>
+                      <div className="age-stat-content">
+                        <div className="age-stat-value">{dashboardStats?.ageGroups?.Dewasa || 0}</div>
+                        <div className="age-stat-label">Dewasa (18-59 tahun)</div>
+                      </div>
+                    </div>
+                    <div className="age-stat-card">
+                      <div className="age-stat-icon lansia">
+                        <Elderly />
+                      </div>
+                      <div className="age-stat-content">
+                        <div className="age-stat-value">{dashboardStats?.ageGroups?.Lansia || 0}</div>
+                        <div className="age-stat-label">Lansia (60+ tahun)</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Health Conditions Section */}
+            <section className="health-conditions-section">
+              <div className="container">
+                <h2 className="section-title">Kondisi Kesehatan yang Terdeteksi</h2>
+                <div className="health-charts-grid">
+                  <div className="chart-container">
+                    <div className="chart-card">
+                      <h3>Distribusi Kondisi Kesehatan</h3>
+                      <div className="chart-wrapper">
+                        {healthConditionsChartData && <Bar data={healthConditionsChartData} options={chartOptions} />}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="health-stats-grid">
+                    <div className="health-stat-card hypertension">
+                      <div className="health-stat-icon">
+                        <Warning />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.hypertension || 0}</div>
+                        <div className="health-stat-label">Hipertensi</div>
+                      </div>
+                    </div>
+                    <div className="health-stat-card diabetes">
+                      <div className="health-stat-icon">
+                        <Favorite />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.diabetes || 0}</div>
+                        <div className="health-stat-label">Diabetes</div>
+                      </div>
+                    </div>
+                    <div className="health-stat-card cholesterol">
+                      <div className="health-stat-icon">
+                        <Warning />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.highCholesterol || 0}</div>
+                        <div className="health-stat-label">Kolesterol Tinggi</div>
+                      </div>
+                    </div>
+                    <div className="health-stat-card uric-acid">
+                      <div className="health-stat-icon">
+                        <Warning />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.highUricAcid || 0}</div>
+                        <div className="health-stat-label">Asam Urat Tinggi</div>
+                      </div>
+                    </div>
+                    <div className="health-stat-card blood-sugar">
+                      <div className="health-stat-icon">
+                        <Warning />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.highBloodSugar || 0}</div>
+                        <div className="health-stat-label">Gula Darah Tinggi</div>
+                      </div>
+                    </div>
+                    <div className="health-stat-card vision">
+                      <div className="health-stat-icon">
+                        <Visibility />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.visionProblems || 0}</div>
+                        <div className="health-stat-label">Masalah Penglihatan</div>
+                      </div>
+                    </div>
+                    <div className="health-stat-card hearing">
+                      <div className="health-stat-icon">
+                        <Hearing />
+                      </div>
+                      <div className="health-stat-content">
+                        <div className="health-stat-value">{dashboardStats?.healthConditions?.hearingProblems || 0}</div>
+                        <div className="health-stat-label">Masalah Pendengaran</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Monthly Trends Section */}
+            <section className="trends-section">
+              <div className="container">
+                <h2 className="section-title">Tren Pemeriksaan 6 Bulan Terakhir</h2>
+                <div className="chart-container">
+                  <div className="chart-card">
+                    <h3>Grafik Tren Pemeriksaan</h3>
+                    <div className="chart-wrapper">
+                      {monthlyTrendsChartData && <Line data={monthlyTrendsChartData} options={chartOptions} />}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -146,78 +503,6 @@ function Dashboard() {
               </div>
             </section>
 
-            {/* Content Section */}
-            <section className="content-section">
-              <div className="container">
-                <div className="main-content">
-                  <h3 className="content-title">Aktivitas Terbaru</h3>
-
-                  {/* Chart Placeholder */}
-                  <div className="chart-placeholder">
-                    <div className="chart-placeholder-content">
-                      <div className="chart-placeholder-icon">
-                        <TrendingUp />
-                      </div>
-                      <div className="chart-placeholder-text">
-                        Grafik Statistik Kunjungan
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Activity List */}
-                  <ul className="activity-list">
-                    <li className="activity-item">
-                      <div className="activity-icon">
-                        <PersonAdd />
-                      </div>
-                      <div className="activity-content">
-                        <div className="activity-title">Pasien Baru Terdaftar</div>
-                        <div className="activity-description">
-                          Ahmad Surya telah mendaftar sebagai pasien baru
-                        </div>
-                      </div>
-                      <div className="activity-time">2 jam lalu</div>
-                    </li>
-                    <li className="activity-item">
-                      <div className="activity-icon">
-                        <LocalHospital />
-                      </div>
-                      <div className="activity-content">
-                        <div className="activity-title">Pemeriksaan Rutin Selesai</div>
-                        <div className="activity-description">
-                          Pemeriksaan kesehatan rutin untuk 15 pasien telah selesai
-                        </div>
-                      </div>
-                      <div className="activity-time">4 jam lalu</div>
-                    </li>
-                    <li className="activity-item">
-                      <div className="activity-icon">
-                        <Vaccines />
-                      </div>
-                      <div className="activity-content">
-                        <div className="activity-title">Vaksinasi COVID-19</div>
-                        <div className="activity-description">
-                          8 orang telah menerima vaksinasi dosis kedua
-                        </div>
-                      </div>
-                      <div className="activity-time">6 jam lalu</div>
-                    </li>
-                    <li className="activity-item">
-                      <div className="activity-icon">
-                        <CheckCircle />
-                      </div>
-                      <div className="activity-content">
-                        <div className="activity-title">Laporan Harian Selesai</div>
-                        <div className="activity-description">
-                          Laporan kesehatan harian telah berhasil dibuat dan dikirim
-                        </div>
-                      </div>
-                      <div className="activity-time">1 hari lalu</div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </section>
           </main>
         </div>
       </div>

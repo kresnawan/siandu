@@ -430,8 +430,20 @@
 
 .health-conditions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.condition-item {
+  display: flex;
+  flex-direction: column;
   gap: 0.25rem;
+}
+
+.condition-value {
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  font-weight: 500;
 }
 
 .condition-tag {

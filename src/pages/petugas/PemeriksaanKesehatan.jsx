@@ -88,8 +88,8 @@ function PemeriksaanKesehatan() {
     nutrition_status: '',
     hypertension: '',
     diabetes: '',
-    high_cholesterol: '',
-    high_uric_acid: '',
+    cholesterol: '',
+    uric_acid: '',
     vision_problems: '',
     hearing_problems: '',
     treatment: '',
@@ -169,13 +169,13 @@ function PemeriksaanKesehatan() {
   const loadPatients = async () => {
     try {
       clearError();
-      const response = await get('/api/patients');
+      const response = await get('/patients');
+      console.log('Patients API response:', response);
       setPatients(response || []);
-      console.log(response)
     } catch (err) {
       console.error('Error loading patients:', err);
-      // Sample data for demo
-    
+      // Set empty array on error to prevent issues
+      setPatients([]);
     }
   };
 
@@ -191,7 +191,8 @@ function PemeriksaanKesehatan() {
         const bmi = calculateBMI(exam.weight, exam.height);
         const bloodPressureStatus = getBloodPressureStatus(exam.blood_pressure_systolic, exam.blood_pressure_diastolic);
         const bloodSugarStatus = getBloodSugarStatus(exam.blood_sugar);
-        const cholesterolStatus = getCholesterolStatus(exam.high_cholesterol);
+        const cholesterolStatus = getCholesterolStatus(exam.cholesterol);
+        const uricAcidStatus = getUricAcidStatus(exam.uric_acid);
         
         return {
           ...exam,
@@ -202,15 +203,18 @@ function PemeriksaanKesehatan() {
           bloodPressureSystolic: exam.blood_pressure_systolic,
           bloodPressureDiastolic: exam.blood_pressure_diastolic,
           bloodSugar: exam.blood_sugar,
+          cholesterol: exam.cholesterol,
+          uricAcid: exam.uric_acid,
           bmi: bmi,
           bloodPressureStatus: bloodPressureStatus,
           bloodSugarStatus: bloodSugarStatus,
           cholesterolStatus: cholesterolStatus,
+          uricAcidStatus: uricAcidStatus,
           nutritionStatus: exam.nutrition_status,
           hypertension: exam.hypertension ? 'Ya' : 'Tidak',
           diabetes: exam.diabetes ? 'Ya' : 'Tidak',
-          highCholesterol: exam.high_cholesterol ? 'Ya' : 'Tidak',
-          highUricAcid: exam.high_uric_acid ? 'Ya' : 'Tidak',
+          highCholesterol: exam.cholesterol ? (exam.cholesterol > 200 ? 'Ya' : 'Tidak') : 'Tidak',
+          highUricAcid: exam.uric_acid ? (exam.uric_acid > 7.0 ? 'Ya' : 'Tidak') : 'Tidak',
           visionProblems: exam.vision_problems ? 'Ya' : 'Tidak',
           hearingProblems: exam.hearing_problems ? 'Ya' : 'Tidak',
           treatment: exam.treatment ? 'Ya' : 'Tidak',
@@ -279,8 +283,8 @@ function PemeriksaanKesehatan() {
       nutrition_status: '',
       hypertension: '',
       diabetes: '',
-      high_cholesterol: '',
-      high_uric_acid: '',
+      cholesterol: '',
+      uric_acid: '',
       vision_problems: '',
       hearing_problems: '',
       treatment: '',
@@ -355,9 +359,18 @@ function PemeriksaanKesehatan() {
   const getCholesterolStatus = (cholesterol) => {
     if (!cholesterol) return '';
     
-    const chol = parseInt(cholesterol);
+    const chol = parseFloat(cholesterol);
     
     if (chol > 200) return 'TINGGI';
+    return 'NORMAL';
+  };
+
+  const getUricAcidStatus = (uricAcid) => {
+    if (!uricAcid) return '';
+    
+    const uric = parseFloat(uricAcid);
+    
+    if (uric > 7.0) return 'TINGGI';
     return 'NORMAL';
   };
 
@@ -438,6 +451,22 @@ function PemeriksaanKesehatan() {
     }
   };
 
+  // Helper: determine age group from birthDate (string 'YYYY-MM-DD' or Date)
+  const getAgeGroupFromBirthDate = (birthDate) => {
+    if (!birthDate) return 'Unknown';
+    const birth = typeof birthDate === 'string' ? new Date(birthDate) : new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return 'Unknown';
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    if (age < 5) return 'Balita';
+    if (age >= 5 && age <= 17) return 'Remaja';
+    if (age >= 18 && age <= 59) return 'Dewasa';
+    if (age >= 60) return 'Lansia';
+    return 'Unknown';
+  };
+
   const generateMonthlyReport = () => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -447,31 +476,89 @@ function PemeriksaanKesehatan() {
       return examDate.getMonth() === currentMonth && examDate.getFullYear() === currentYear;
     });
 
-    const report = {
-      period: `${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`,
-      totalExaminations: monthlyExams.length,
-      newVisits: monthlyExams.filter(exam => exam.isNewVisit).length,
-      nutritionStats: {
-        kurus: monthlyExams.filter(exam => exam.nutritionStatus === 'KURUS').length,
-        normal: monthlyExams.filter(exam => exam.nutritionStatus === 'NORMAL').length,
-        gemuk: monthlyExams.filter(exam => exam.nutritionStatus === 'GEMUK').length,
-        obesitas: monthlyExams.filter(exam => exam.nutritionStatus === 'OBESITAS').length
+    // Build quick lookup for patients by id (normalize to string keys)
+    const patientById = new Map(patients.map(p => [String(p.id), p]));
+
+    // Initialize groups
+    const ageGroups = ['Balita', 'Remaja', 'Dewasa', 'Lansia'];
+    const defaultStats = () => ({
+      newVisits: 0,
+      total: 0,
+      nutrition: { kurus: 0, normal: 0, gemuk: 0, obesitas: 0 },
+      conditions: {
+        hypertension: 0,
+        diabetes: 0,
+        highCholesterol: 0,
+        highUricAcid: 0,
+        visionProblems: 0,
+        hearingProblems: 0
       },
-      healthConditions: {
-        hypertension: monthlyExams.filter(exam => exam.hypertension === 'Ya').length,
-        diabetes: monthlyExams.filter(exam => exam.diabetes === 'Ya').length,
-        highCholesterol: monthlyExams.filter(exam => exam.highCholesterol === 'Ya').length,
-        highUricAcid: monthlyExams.filter(exam => exam.highUricAcid === 'Ya').length,
-        visionProblems: monthlyExams.filter(exam => exam.visionProblems === 'Ya').length,
-        hearingProblems: monthlyExams.filter(exam => exam.hearingProblems === 'Ya').length
-      },
-      actions: {
-        treated: monthlyExams.filter(exam => exam.treatment === 'Ya').length,
-        referred: monthlyExams.filter(exam => exam.referral === 'Ya').length
-      }
+      actions: { treated: 0, referred: 0 }
+    });
+
+    const grouped = {
+      Balita: defaultStats(),
+      Remaja: defaultStats(),
+      Dewasa: defaultStats(),
+      Lansia: defaultStats()
     };
 
-    return report;
+    monthlyExams.forEach(exam => {
+      const pid = exam.patientId != null ? String(exam.patientId) : (exam.patient_id != null ? String(exam.patient_id) : undefined);
+      const patient = pid ? patientById.get(pid) : undefined;
+      // Default to 'Dewasa' when patient or birthDate missing to avoid dropping rows
+      const derivedGroup = patient && patient.birthDate ? getAgeGroupFromBirthDate(patient.birthDate) : 'Dewasa';
+      const group = grouped[derivedGroup] ? derivedGroup : 'Dewasa';
+
+      const g = grouped[group];
+      g.total += 1;
+      if (exam.isNewVisit) g.newVisits += 1;
+
+      // Nutrition
+      const ns = (exam.nutritionStatus || exam.nutrition_status || '').toUpperCase();
+      if (ns === 'KURUS') g.nutrition.kurus += 1;
+      else if (ns === 'NORMAL') g.nutrition.normal += 1;
+      else if (ns === 'GEMUK') g.nutrition.gemuk += 1;
+      else if (ns === 'OBESITAS') g.nutrition.obesitas += 1;
+
+      // Conditions (values are 'Ya'/'Tidak')
+      if (exam.hypertension === 'Ya') g.conditions.hypertension += 1;
+      if (exam.diabetes === 'Ya') g.conditions.diabetes += 1;
+      if (exam.highCholesterol === 'Ya') g.conditions.highCholesterol += 1;
+      if (exam.highUricAcid === 'Ya') g.conditions.highUricAcid += 1;
+      if (exam.visionProblems === 'Ya') g.conditions.visionProblems += 1;
+      if (exam.hearingProblems === 'Ya') g.conditions.hearingProblems += 1;
+
+      // Actions
+      if (exam.treatment === 'Ya') g.actions.treated += 1;
+      if (exam.referral === 'Ya') g.actions.referred += 1;
+    });
+
+    // Totals across groups
+    const totals = ageGroups.reduce((acc, key) => {
+      const g = grouped[key];
+      acc.newVisits += g.newVisits;
+      acc.total += g.total;
+      acc.nutrition.kurus += g.nutrition.kurus;
+      acc.nutrition.normal += g.nutrition.normal;
+      acc.nutrition.gemuk += g.nutrition.gemuk;
+      acc.nutrition.obesitas += g.nutrition.obesitas;
+      acc.conditions.hypertension += g.conditions.hypertension;
+      acc.conditions.diabetes += g.conditions.diabetes;
+      acc.conditions.highCholesterol += g.conditions.highCholesterol;
+      acc.conditions.highUricAcid += g.conditions.highUricAcid;
+      acc.conditions.visionProblems += g.conditions.visionProblems;
+      acc.conditions.hearingProblems += g.conditions.hearingProblems;
+      acc.actions.treated += g.actions.treated;
+      acc.actions.referred += g.actions.referred;
+      return acc;
+    }, { newVisits: 0, total: 0, nutrition: { kurus: 0, normal: 0, gemuk: 0, obesitas: 0 }, conditions: { hypertension: 0, diabetes: 0, highCholesterol: 0, highUricAcid: 0, visionProblems: 0, hearingProblems: 0 }, actions: { treated: 0, referred: 0 } });
+
+    return {
+      period: `${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`,
+      groups: grouped,
+      totals
+    };
   };
 
 
@@ -689,8 +776,22 @@ function PemeriksaanKesehatan() {
                               <div className="health-conditions">
                                 {exam.hypertension === 'Ya' && <span className="condition-tag">Hipertensi</span>}
                                 {exam.diabetes === 'Ya' && <span className="condition-tag">Diabetes</span>}
-                                {exam.highCholesterol === 'Ya' && <span className="condition-tag">Kolesterol Tinggi</span>}
-                                {exam.highUricAcid === 'Ya' && <span className="condition-tag">Asam Urat Tinggi</span>}
+                                {exam.cholesterol && (
+                                  <div className="condition-item">
+                                    <span className="condition-value">Kolesterol: {exam.cholesterol} mg/dL</span>
+                                    <span className={`status-tag ${exam.cholesterolStatus?.toLowerCase()}`}>
+                                      {exam.cholesterolStatus}
+                                    </span>
+                                  </div>
+                                )}
+                                {exam.uric_acid && (
+                                  <div className="condition-item">
+                                    <span className="condition-value">Asam Urat: {exam.uric_acid} mg/dL</span>
+                                    <span className={`status-tag ${exam.uricAcidStatus?.toLowerCase()}`}>
+                                      {exam.uricAcidStatus}
+                                    </span>
+                                  </div>
+                                )}
                                 {exam.visionProblems === 'Ya' && <span className="condition-tag">Gangguan Penglihatan</span>}
                                 {exam.hearingProblems === 'Ya' && <span className="condition-tag">Gangguan Pendengaran</span>}
                               </div>
@@ -719,8 +820,8 @@ function PemeriksaanKesehatan() {
                                       nutrition_status: exam.nutrition_status || exam.nutritionStatus,
                                       hypertension: exam.hypertension,
                                       diabetes: exam.diabetes,
-                                      high_cholesterol: exam.high_cholesterol || exam.highCholesterol,
-                                      high_uric_acid: exam.high_uric_acid || exam.highUricAcid,
+                                      cholesterol: exam.cholesterol,
+                                      uric_acid: exam.uric_acid,
                                       vision_problems: exam.vision_problems || exam.visionProblems,
                                       hearing_problems: exam.hearing_problems || exam.hearingProblems,
                                       treatment: exam.treatment,
@@ -782,11 +883,17 @@ function PemeriksaanKesehatan() {
                 className={formErrors.patient_id ? 'error' : ''}
               >
                 <option value="">Pilih Pasien</option>
-                {patients.map(patient => (
-                  <option key={patient.id} value={patient.id}>
-                    {patient.name} - {patient.nik}
-                  </option>
-                ))}
+                {loading ? (
+                  <option value="" disabled>Memuat data pasien...</option>
+                ) : patients.length === 0 ? (
+                  <option value="" disabled>Tidak ada pasien tersedia</option>
+                ) : (
+                  patients.map(patient => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.name} - {patient.nik}
+                    </option>
+                  ))
+                )}
               </select>
               {formErrors.patient_id && <span className="error-message">{formErrors.patient_id}</span>}
             </div>
@@ -903,6 +1010,48 @@ function PemeriksaanKesehatan() {
             </div>
 
             <div className="form-group">
+              <label>Kolesterol (mg/dL)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={examData.cholesterol}
+                onChange={(e) => handleFormChange('cholesterol', e.target.value)}
+                placeholder="200"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Status Kolesterol</label>
+              <input
+                type="text"
+                value={getCholesterolStatus(examData.cholesterol) || ''}
+                readOnly
+                placeholder="Otomatis dihitung"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Asam Urat (mg/dL)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={examData.uric_acid}
+                onChange={(e) => handleFormChange('uric_acid', e.target.value)}
+                placeholder="7.0"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Status Asam Urat</label>
+              <input
+                type="text"
+                value={getUricAcidStatus(examData.uric_acid) || ''}
+                readOnly
+                placeholder="Otomatis dihitung"
+              />
+            </div>
+
+            <div className="form-group">
               <label>Hipertensi</label>
               <select
                 value={examData.hypertension}
@@ -926,29 +1075,6 @@ function PemeriksaanKesehatan() {
               </select>
             </div>
 
-            <div className="form-group">
-              <label>Kolesterol Tinggi</label>
-              <select
-                value={examData.high_cholesterol}
-                onChange={(e) => handleFormChange('high_cholesterol', e.target.value)}
-              >
-                <option value="">Pilih</option>
-                <option value="Ya">Ya</option>
-                <option value="Tidak">Tidak</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Asam Urat Tinggi</label>
-              <select
-                value={examData.high_uric_acid}
-                onChange={(e) => handleFormChange('high_uric_acid', e.target.value)}
-              >
-                <option value="">Pilih</option>
-                <option value="Ya">Ya</option>
-                <option value="Tidak">Tidak</option>
-              </select>
-            </div>
 
             <div className="form-group">
               <label>Gangguan Penglihatan</label>
@@ -1033,14 +1159,14 @@ function PemeriksaanKesehatan() {
               <div className="report-content">
                 <div className="report-header">
                   <h3>Laporan Bulan {report.period}</h3>
-                  <p>Total Pemeriksaan: {report.totalExaminations}</p>
+                  <p>Total Pemeriksaan: {report.totals.total}</p>
                 </div>
 
                 <div className="report-table-container">
                   <table className="monthly-report-table">
                     <thead>
                       <tr>
-                        <th>KUN. BARU</th>
+                        <th>KELOMPOK USIA</th>
                         <th>kunjungan</th>
                         <th colSpan="4">STATUS GIZI</th>
                         <th>HIPERTENSI</th>
@@ -1071,20 +1197,84 @@ function PemeriksaanKesehatan() {
                     </thead>
                     <tbody>
                       <tr>
-                        <td>{report.newVisits}</td>
-                        <td>{report.totalExaminations}</td>
-                        <td>{report.nutritionStats.kurus}</td>
-                        <td>{report.nutritionStats.normal}</td>
-                        <td>{report.nutritionStats.gemuk}</td>
-                        <td>{report.nutritionStats.obesitas}</td>
-                        <td>{report.healthConditions.hypertension}</td>
-                        <td>{report.healthConditions.diabetes}</td>
-                        <td>{report.healthConditions.highCholesterol}</td>
-                        <td>{report.healthConditions.highUricAcid}</td>
-                        <td>{report.healthConditions.visionProblems}</td>
-                        <td>{report.healthConditions.hearingProblems}</td>
-                        <td>{report.actions.treated}</td>
-                        <td>{report.actions.referred}</td>
+                        <td style={{ fontWeight: 700 }}>Balita</td>
+                        <td>{report.groups.Balita.total}</td>
+                        <td>{report.groups.Balita.nutrition.kurus}</td>
+                        <td>{report.groups.Balita.nutrition.normal}</td>
+                        <td>{report.groups.Balita.nutrition.gemuk}</td>
+                        <td>{report.groups.Balita.nutrition.obesitas}</td>
+                        <td>{report.groups.Balita.conditions.hypertension}</td>
+                        <td>{report.groups.Balita.conditions.diabetes}</td>
+                        <td>{report.groups.Balita.conditions.highCholesterol}</td>
+                        <td>{report.groups.Balita.conditions.highUricAcid}</td>
+                        <td>{report.groups.Balita.conditions.visionProblems}</td>
+                        <td>{report.groups.Balita.conditions.hearingProblems}</td>
+                        <td>{report.groups.Balita.actions.treated}</td>
+                        <td>{report.groups.Balita.actions.referred}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 700 }}>Remaja</td>
+                        <td>{report.groups.Remaja.total}</td>
+                        <td>{report.groups.Remaja.nutrition.kurus}</td>
+                        <td>{report.groups.Remaja.nutrition.normal}</td>
+                        <td>{report.groups.Remaja.nutrition.gemuk}</td>
+                        <td>{report.groups.Remaja.nutrition.obesitas}</td>
+                        <td>{report.groups.Remaja.conditions.hypertension}</td>
+                        <td>{report.groups.Remaja.conditions.diabetes}</td>
+                        <td>{report.groups.Remaja.conditions.highCholesterol}</td>
+                        <td>{report.groups.Remaja.conditions.highUricAcid}</td>
+                        <td>{report.groups.Remaja.conditions.visionProblems}</td>
+                        <td>{report.groups.Remaja.conditions.hearingProblems}</td>
+                        <td>{report.groups.Remaja.actions.treated}</td>
+                        <td>{report.groups.Remaja.actions.referred}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 700 }}>Dewasa</td>
+                        <td>{report.groups.Dewasa.total}</td>
+                        <td>{report.groups.Dewasa.nutrition.kurus}</td>
+                        <td>{report.groups.Dewasa.nutrition.normal}</td>
+                        <td>{report.groups.Dewasa.nutrition.gemuk}</td>
+                        <td>{report.groups.Dewasa.nutrition.obesitas}</td>
+                        <td>{report.groups.Dewasa.conditions.hypertension}</td>
+                        <td>{report.groups.Dewasa.conditions.diabetes}</td>
+                        <td>{report.groups.Dewasa.conditions.highCholesterol}</td>
+                        <td>{report.groups.Dewasa.conditions.highUricAcid}</td>
+                        <td>{report.groups.Dewasa.conditions.visionProblems}</td>
+                        <td>{report.groups.Dewasa.conditions.hearingProblems}</td>
+                        <td>{report.groups.Dewasa.actions.treated}</td>
+                        <td>{report.groups.Dewasa.actions.referred}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 700 }}>Lansia</td>
+                        <td>{report.groups.Lansia.total}</td>
+                        <td>{report.groups.Lansia.nutrition.kurus}</td>
+                        <td>{report.groups.Lansia.nutrition.normal}</td>
+                        <td>{report.groups.Lansia.nutrition.gemuk}</td>
+                        <td>{report.groups.Lansia.nutrition.obesitas}</td>
+                        <td>{report.groups.Lansia.conditions.hypertension}</td>
+                        <td>{report.groups.Lansia.conditions.diabetes}</td>
+                        <td>{report.groups.Lansia.conditions.highCholesterol}</td>
+                        <td>{report.groups.Lansia.conditions.highUricAcid}</td>
+                        <td>{report.groups.Lansia.conditions.visionProblems}</td>
+                        <td>{report.groups.Lansia.conditions.hearingProblems}</td>
+                        <td>{report.groups.Lansia.actions.treated}</td>
+                        <td>{report.groups.Lansia.actions.referred}</td>
+                      </tr>
+                      <tr style={{ fontWeight: 700 }}>
+                        <td>TOTAL</td>
+                        <td>{report.totals.total}</td>
+                        <td>{report.totals.nutrition.kurus}</td>
+                        <td>{report.totals.nutrition.normal}</td>
+                        <td>{report.totals.nutrition.gemuk}</td>
+                        <td>{report.totals.nutrition.obesitas}</td>
+                        <td>{report.totals.conditions.hypertension}</td>
+                        <td>{report.totals.conditions.diabetes}</td>
+                        <td>{report.totals.conditions.highCholesterol}</td>
+                        <td>{report.totals.conditions.highUricAcid}</td>
+                        <td>{report.totals.conditions.visionProblems}</td>
+                        <td>{report.totals.conditions.hearingProblems}</td>
+                        <td>{report.totals.actions.treated}</td>
+                        <td>{report.totals.actions.referred}</td>
                       </tr>
                     </tbody>
                   </table>

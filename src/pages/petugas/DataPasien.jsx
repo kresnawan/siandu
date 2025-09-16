@@ -160,7 +160,7 @@ function DataPasien() {
   // Reset form data when modals close
   useEffect(() => {
     if (!showAddModal && !showEditModal) {
-      setFormData({
+      const defaultFormData = {
         name: '',
         nik: '',
         phone: '',
@@ -169,8 +169,11 @@ function DataPasien() {
         birthDate: '',
         gender: '',
         bloodType: ''
-      });
+      };
+      console.log('Resetting form data to:', defaultFormData);
+      setFormData(defaultFormData);
       setFormErrors({});
+      setSelectedPatient(null);
     }
   }, [showAddModal, showEditModal]);
 
@@ -180,17 +183,25 @@ function DataPasien() {
   };
 
   const handleEditPatient = (patient) => {
+    console.log('Editing patient data:', patient);
     setSelectedPatient(patient);
-    setFormData({
+    
+    const formData = {
       name: patient.name || '',
       nik: patient.nik || '',
       phone: patient.phone || '',
       email: patient.email || '',
       address: patient.address || '',
-      birthDate: patient.birthDate ? patient.birthDate.split('T')[0] : '',
+      birthDate: patient.birthDate ? 
+        (typeof patient.birthDate === 'string' ? 
+          patient.birthDate.split('T')[0] : 
+          new Date(patient.birthDate).toISOString().split('T')[0]) : '',
       gender: patient.gender || '',
       bloodType: patient.bloodType || ''
-    });
+    };
+    
+    console.log('Form data set to:', formData);
+    setFormData(formData);
     setFormErrors({});
     setShowEditModal(true);
   };
@@ -265,8 +276,8 @@ function DataPasien() {
       const response = await post('/patients', formData);
       await loadPatients();
 
-      if (response.data) {
-        setPatients(prev => [...prev, response.data]);
+      if (response) {
+        setPatients(prev => [...prev, response]);
         setShowAddModal(false);
         setSuccessMessage('Pasien berhasil ditambahkan');
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -286,12 +297,14 @@ function DataPasien() {
 
     try {
       clearError();
+      console.log('Updating patient with data:', formData);
       const response = await put(`/patients/${selectedPatient.id}`, formData);
+      console.log('Update response:', response);
       await loadPatients();
 
-      if (response.data) {
+      if (response) {
         setPatients(prev => prev.map(p =>
-          p.id === selectedPatient.id ? response.data : p
+          p.id === selectedPatient.id ? response : p
         ));
         setShowEditModal(false);
         setSuccessMessage('Data pasien berhasil diperbarui');

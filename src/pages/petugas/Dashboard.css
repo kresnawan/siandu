@@ -424,37 +424,306 @@
   margin-top: 0.5rem;
 }
 
-/* Chart Placeholder */
-.chart-placeholder {
-  height: 300px;
-  background: linear-gradient(135deg, var(--gray-light) 0%, var(--accent) 100%);
-  border-radius: 12px;
+/* Loading and Error States */
+.loading-container, .error-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 2rem 0;
-  border: 2px dashed var(--primary-light);
-}
-
-.chart-placeholder-content {
+  min-height: 400px;
   text-align: center;
-  color: var(--primary);
 }
 
-.chart-placeholder-icon {
-  font-size: 3rem;
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--gray-light);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
-.chart-placeholder-text {
-  font-size: 1.1rem;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container button {
+  background: var(--primary);
+  color: var(--white);
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
   font-weight: 600;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.error-container button:hover {
+  background: var(--primary-dark);
+}
+
+/* Age Groups Section */
+.age-groups-section {
+  padding: 60px 0;
+  background: var(--white);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-top: 3rem;
+  align-items: start;
+}
+
+.chart-container {
+  width: 100%;
+}
+
+.chart-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-light);
+}
+
+.chart-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.chart-wrapper {
+  height: 300px;
+  position: relative;
+}
+
+.age-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.age-stat-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-light);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.age-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.age-stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.age-stat-icon.balita {
+  background: linear-gradient(135deg, #FF6384, #FF8A95);
+}
+
+.age-stat-icon.remaja {
+  background: linear-gradient(135deg, #36A2EB, #5BB3F0);
+}
+
+.age-stat-icon.dewasa {
+  background: linear-gradient(135deg, #FFCE56, #FFD93D);
+}
+
+.age-stat-icon.lansia {
+  background: linear-gradient(135deg, #4BC0C0, #6DD5D5);
+}
+
+.age-stat-content {
+  flex: 1;
+}
+
+.age-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 0.25rem;
+}
+
+.age-stat-label {
+  font-size: 0.9rem;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+/* Health Conditions Section */
+.health-conditions-section {
+  padding: 60px 0;
+  background: var(--gray-light);
+}
+
+.health-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  margin-top: 3rem;
+  align-items: start;
+}
+
+.health-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.health-stat-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-light);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.health-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.health-stat-card.hypertension {
+  border-left-color: #FF6B6B;
+}
+
+.health-stat-card.diabetes {
+  border-left-color: #4ECDC4;
+}
+
+.health-stat-card.cholesterol {
+  border-left-color: #45B7D1;
+}
+
+.health-stat-card.uric-acid {
+  border-left-color: #96CEB4;
+}
+
+.health-stat-card.blood-sugar {
+  border-left-color: #FFEAA7;
+}
+
+.health-stat-card.vision {
+  border-left-color: #DDA0DD;
+}
+
+.health-stat-card.hearing {
+  border-left-color: #98D8C8;
+}
+
+.health-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.hypertension .health-stat-icon {
+  background: #FF6B6B;
+}
+
+.diabetes .health-stat-icon {
+  background: #4ECDC4;
+}
+
+.cholesterol .health-stat-icon {
+  background: #45B7D1;
+}
+
+.uric-acid .health-stat-icon {
+  background: #96CEB4;
+}
+
+.blood-sugar .health-stat-icon {
+  background: #FFEAA7;
+  color: var(--text-dark);
+}
+
+.vision .health-stat-icon {
+  background: #DDA0DD;
+}
+
+.hearing .health-stat-icon {
+  background: #98D8C8;
+}
+
+.health-stat-content {
+  flex: 1;
+}
+
+.health-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 0.25rem;
+}
+
+.health-stat-label {
+  font-size: 0.85rem;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+/* Trends Section */
+.trends-section {
+  padding: 60px 0;
+  background: var(--white);
+}
+
+.trends-section .chart-wrapper {
+  height: 400px;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .health-charts-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .age-stats-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -487,7 +756,9 @@
 
   .stats-section,
   .actions-section,
-  .content-section {
+  .age-groups-section,
+  .health-conditions-section,
+  .trends-section {
     padding: 50px 0;
   }
 
@@ -555,7 +826,9 @@
 
   .stats-section,
   .actions-section,
-  .content-section {
+  .age-groups-section,
+  .health-conditions-section,
+  .trends-section {
     padding: 40px 0;
   }
 
@@ -590,14 +863,29 @@
     font-size: 1.5rem;
   }
 
-  .activity-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+  .chart-card {
+    padding: 1.5rem;
   }
 
-  .activity-time {
-    align-self: flex-end;
+  .chart-wrapper {
+    height: 250px;
+  }
+
+  .trends-section .chart-wrapper {
+    height: 300px;
+  }
+
+  .age-stat-card,
+  .health-stat-card {
+    padding: 1rem;
+  }
+
+  .age-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .health-stat-value {
+    font-size: 1.25rem;
   }
 
   .sidebar-menu {
